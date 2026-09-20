@@ -1,0 +1,57 @@
+/* =========================================================
+   HELLMET — Variables globales de diseño
+   Este archivo NO tiene estilos de componentes, solo variables.
+   Cárgalo primero, antes de cualquier otro CSS.
+   ========================================================= */
+
+:root {
+  --bg: #E9E6DF;
+  --bg-panel: #DCD8CD;
+  --bg-panel-2: #C7C0AE;
+  --line: #A79D86;
+  --text: #201C16;
+  --text-dim: #000000;
+  --accent: #7A1E1E;
+  --accent-2: #A9832B;
+  --accent-hover: #932525;
+  --accent-glow: rgba(122, 30, 30, 0.35);
+  --accent-2-glow: rgba(169, 131, 43, 0.35);
+
+  --radius: 10px;
+
+  --header-gradient: linear-gradient(135deg, #6e6c6c 0%, #DCDCDC 20%, #6e6c6c 45%, #9C9C9C 55%, #C7C7C7 75%, #6e6c6c 100%);
+  --header-line: rgba(0, 0, 0, 0.25);
+
+  --font-display: "AlteHass", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-hellmet: "desvanecer", sans-serif;
+
+  --container: 1180px;
+  --logo-badge-size: 150px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+}
+
+@font-face {
+  font-family: 'AlteHass';
+  src: url("../fuentes/AlteHaasGroteskRegular.ttf");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face{
+  font-family: "desvanecer";
+  src: url("../fuentes/Capture\ it.ttf");
+  font-weight: bold;
+  font-style: normal;
+}

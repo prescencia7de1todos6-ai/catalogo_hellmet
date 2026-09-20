@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HELLMET — Reporte</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../Assets/Css/variables.css">
+<link rel="stylesheet" href="../Assets/Css/admin-layout.css">
+</head>
+<body>
+
+<div class="admin-layout">
+  <div id="navbar-container"></div>
+
+  <main class="admin-main">
+    <h2>Reporte de cambios</h2>
+    <p style="font-size:0.85rem; color:var(--text-dim); margin:-12px 0 20px;">
+      Muestra el último estado de cada registro: quién lo creó y quién lo modificó por última vez.
+    </p>
+
+    <div class="admin-form-grid" style="max-width:520px; margin-bottom:20px;">
+      <div class="admin-field">
+        <label for="filtro-tipo">Filtrar por tipo</label>
+        <select id="filtro-tipo">
+          <option value="">Todos</option>
+          <option value="Producto">Producto</option>
+          <option value="Sucursal">Sucursal</option>
+          <option value="Red social">Red social</option>
+        </select>
+      </div>
+      <div class="admin-field">
+        <label for="filtro-texto">Buscar por nombre</label>
+        <input type="text" id="filtro-texto" placeholder="Escribe para filtrar...">
+      </div>
+    </div>
+
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Tipo</th><th>Nombre</th>
+            <th>Registrado</th><th>Registrado por</th>
+            <th>Última edición</th><th>Editado por</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-reporte"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../Services/Supabase.js"></script>
+<script src="../Utils/mensajes.js"></script>
+<script src="../Services/Administrador.js"></script>
+<script src="../Services/Reporte.js"></script>
+<script src="../Componentes/Navbar.js"></script>
+<script>
+  let cambiosCargados = [];
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    await AdministradorService.protegerPagina();
+    await renderNavbar("reporte");
+    await cargarReporte();
+
+    document.getElementById("filtro-tipo").addEventListener("change", pintarTabla);
+    document.getElementById("filtro-texto").addEventListener("input", pintarTabla);
+  });
+
+  function formatearFecha(valor) {
+    if (!valor) return "—";
+    const f = new Date(valor);
+    return f.toLocaleDateString("es-BO") + " " + f.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  async function cargarReporte() {
+    const { data, error } = await ReporteService.listarCambios();
+    const tbody = document.getElementById("tabla-reporte");
+
+    if (error) {
+      tbody.innerHTML = `<tr class="admin-empty-row"><td colspan="6">No se pudo cargar el reporte. ¿Ya creaste la vista "vista_reporte_cambios" en Supabase? (ver LEEME-SUPABASE.md)</td></tr>`;
+      return;
+    }
+
+    cambiosCargados = data || [];
+    pintarTabla();
+  }
+
+  function pintarTabla() {
+    const tbody = document.getElementById("tabla-reporte");
+    const tipo = document.getElementById("filtro-tipo").value;
+    const texto = document.getElementById("filtro-texto").value.trim().toLowerCase();
+
+    const filtrados = cambiosCargados.filter((c) => {
+      const coincideTipo = !tipo || c.tipo === tipo;
+      const coincideTexto = !texto || (c.nombre || "").toLowerCase().includes(texto);
+      return coincideTipo && coincideTexto;
+    });
+
+    if (filtrados.length === 0) {
+      tbody.innerHTML = `<tr class="admin-empty-row"><td colspan="6">Sin movimientos que coincidan.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtrados.map((c) => `
+      <tr>
+        <td>${c.tipo}</td>
+        <td>${c.nombre || "—"}</td>
+        <td>${formatearFecha(c.fecha_registro)}</td>
+        <td>${c.registrado_por || "—"}</td>
+        <td>${formatearFecha(c.fecha_actualizacion)}</td>
+        <td>${c.actualizado_por || "—"}</td>
+      </tr>
+    `).join("");
+  }
+</script>
+</body>
+</html>

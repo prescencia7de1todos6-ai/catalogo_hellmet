@@ -1,0 +1,68 @@
+/* =========================================================
+   HELLMET — Carrusel de portada (index.html)
+   Movimiento continuo, lento, infinito — sin pausas ni saltos.
+   ========================================================= */
+
+.hero-carousel {
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--line);
+  margin-top: 100px;
+}
+
+.hero-track {
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+  width: max-content;
+  /* "animation: nombre duración infinite linear" es la clave del
+     movimiento continuo: "linear" = velocidad constante (sin
+     acelerar ni frenar), "infinite" = nunca se detiene. La duración
+     larga (60s) es lo que lo hace ir lento. */
+  animation: hero-scroll 60s infinite linear;
+}
+
+.hero-slide {
+  position: relative;
+  flex: 0 0 auto;
+  width: 340px;
+  height: 380px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg-panel-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-slide-fallback {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-display);
+  color: var(--text-dim);
+  text-align: center;
+  padding: 20px;
+}
+
+@keyframes hero-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-track { animation: none; }
+}
+
+@media (max-width: 640px) {
+  .hero-slide { width: 240px; height: 260px; }
+}

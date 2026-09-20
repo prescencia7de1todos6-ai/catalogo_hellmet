@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HELLMET — Sucursal y Redes</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../Assets/Css/variables.css">
+<link rel="stylesheet" href="../Assets/Css/admin-layout.css">
+</head>
+<body>
+
+<div class="admin-layout">
+  <div id="navbar-container"></div>
+
+  <main class="admin-main">
+    <h2>Sucursal</h2>
+
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>Nombre</th><th>Celular</th><th>Dirección</th><th>Url Ubicación</th><th>Acciones</th></tr></thead>
+        <tbody id="tabla-sucursales"></tbody>
+      </table>
+    </div>
+
+    <div class="admin-form-card">
+      <h3>Datos de sucursal</h3>
+      <form id="form-sucursal">
+        <input type="hidden" id="suc-id">
+        <div class="admin-form-grid">
+          <div class="admin-field">
+            <label for="suc-nombre">Nombre</label>
+            <input type="text" id="suc-nombre" required>
+          </div>
+          <div class="admin-field">
+            <label for="suc-celular">Celular</label>
+            <input type="text" id="suc-celular" required>
+          </div>
+          <div class="admin-field full">
+            <label for="suc-ubicacion">Dirección</label>
+            <input type="text" id="suc-ubicacion">
+          </div>
+          <div class="admin-field full">
+            <label for="suc-url-ubi">Url Maps</label>
+            <input type="text" id="suc-url-ubi" placeholder="https://maps.google.com/...">
+          </div>
+        </div>
+        <div class="admin-form-actions">
+          <button type="submit" class="admin-btn primary" id="btn-registrar-suc">Registrar</button>
+          <button type="button" class="admin-btn secondary" id="btn-actualizar-suc" disabled>Actualizar</button>
+          <button type="button" class="admin-btn ghost" id="btn-limpiar-suc">Limpiar</button>
+        </div>
+      </form>
+    </div>
+
+    <h2 style="margin-top:40px;">Redes Sociales</h2>
+
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>Red social</th><th>Url</th><th>Acciones</th></tr></thead>
+        <tbody id="tabla-redes"></tbody>
+      </table>
+    </div>
+
+    <div class="admin-form-card">
+      <h3>Datos de red social</h3>
+      <form id="form-red">
+        <input type="hidden" id="red-id">
+        <div class="admin-form-grid">
+          <div class="admin-field">
+            <label for="red-nombre">Red social</label>
+            <input type="text" id="red-nombre" placeholder="Facebook, Instagram..." required>
+          </div>
+          <div class="admin-field full">
+            <label for="red-url">Url</label>
+            <input type="text" id="red-url" required>
+          </div>
+        </div>
+        <div class="admin-form-actions">
+          <button type="submit" class="admin-btn primary" id="btn-registrar-red">Registrar</button>
+          <button type="button" class="admin-btn secondary" id="btn-actualizar-red" disabled>Actualizar</button>
+          <button type="button" class="admin-btn ghost" id="btn-limpiar-red">Limpiar</button>
+        </div>
+      </form>
+    </div>
+    <h2 style="margin-top:40px;">Colores</h2>
+
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>Color</th><th>Acciones</th></tr></thead>
+        <tbody id="tabla-colores"></tbody>
+      </table>
+    </div>
+
+    <div class="admin-form-card">
+      <h3>Datos del color</h3>
+      <form id="form-color">
+        <input type="hidden" id="color-id">
+        <div class="admin-form-grid">
+          <div class="admin-field full">
+            <label for="color-nombre">Nombre del color</label>
+            <input type="text" id="color-nombre" placeholder="Ej: Plomo oscuro" required>
+          </div>
+        </div>
+        <div class="admin-form-actions">
+          <button type="submit" class="admin-btn primary" id="btn-registrar-color">Registrar</button>
+          <button type="button" class="admin-btn secondary" id="btn-actualizar-color" disabled>Actualizar</button>
+          <button type="button" class="admin-btn ghost" id="btn-limpiar-color">Limpiar</button>
+        </div>
+      </form>
+    </div>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../Services/Supabase.js"></script>
+<script src="../Utils/mensajes.js"></script>
+<script src="../Services/Administrador.js"></script>
+<script src="../Services/Sucursal_redes.js"></script>
+<script src="../Services/Color.js"></script>
+<script src="../Componentes/Navbar.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    await AdministradorService.protegerPagina();
+    await renderNavbar("sucursal");
+    await cargarSucursales();
+    await cargarRedes();
+    await cargarColores();
+
+    document.getElementById("btn-limpiar-suc").addEventListener("click", limpiarFormularioSucursal);
+    document.getElementById("form-sucursal").addEventListener("submit", (e) => { e.preventDefault(); guardarSucursal(false); });
+    document.getElementById("btn-actualizar-suc").addEventListener("click", () => guardarSucursal(true));
+
+    document.getElementById("btn-limpiar-red").addEventListener("click", limpiarFormularioRed);
+    document.getElementById("form-red").addEventListener("submit", (e) => { e.preventDefault(); guardarRed(false); });
+    document.getElementById("btn-actualizar-red").addEventListener("click", () => guardarRed(true));
+
+    document.getElementById("btn-limpiar-color").addEventListener("click", limpiarFormularioColor);
+    document.getElementById("form-color").addEventListener("submit", (e) => { e.preventDefault(); guardarColor(false); });
+    document.getElementById("btn-actualizar-color").addEventListener("click", () => guardarColor(true));
+  });
+
+  /* =========================================================
+     SUCURSAL
+     ========================================================= */
+
+  async function cargarSucursales() {
+    const { data, error } = await SucursalRedesService.listarSucursalesAdmin();
+    const tbody = document.getElementById("tabla-sucursales");
+    tbody.innerHTML = "";
+
+    if (error || !data || data.length === 0) {
+      tbody.innerHTML = `<tr class="admin-empty-row"><td colspan="4">Sin sucursales registradas.</td></tr>`;
+      return;
+    }
+
+    data.forEach((s) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${s.nom_sucursal}</td>
+        <td>${s.celular}</td>
+        <td>${s.ubicacion || "—"}</td>
+        <td>${s.url_ubi ? `<a href="${s.url_ubi}" target="_blank" rel="noopener">Ver mapa</a>` : "—"}</td>
+        <td>
+          <button class="btn-mini edit">Editar</button>
+          <button class="btn-mini danger">${s.activo === false ? "Habilitar" : "Eliminar"}</button>
+        </td>`;
+
+      tr.querySelector(".edit").addEventListener("click", () => {
+        document.getElementById("suc-id").value = s.id_sucursal;
+        document.getElementById("suc-nombre").value = s.nom_sucursal;
+        document.getElementById("suc-celular").value = s.celular;
+        document.getElementById("suc-ubicacion").value = s.ubicacion || "";
+        document.getElementById("suc-url-ubi").value = s.url_ubi || "";
+        document.getElementById("btn-actualizar-suc").disabled = false;
+        document.getElementById("form-sucursal").scrollIntoView({ behavior: "smooth" });
+      });
+
+      tr.querySelector(".danger").addEventListener("click", async () => {
+        const vaAInhabilitar = s.activo !== false;
+        const mensaje = vaAInhabilitar
+          ? `¿Está de acuerdo con eliminar la sucursal "${s.nom_sucursal}" del catálogo?`
+          : `¿Está de acuerdo con volver a habilitar la sucursal "${s.nom_sucursal}"?`;
+        if (!confirmarAccion(mensaje)) return;
+
+        if (vaAInhabilitar) await SucursalRedesService.inhabilitarSucursal(s.id_sucursal);
+        else await SucursalRedesService.habilitarSucursal(s.id_sucursal);
+        cargarSucursales();
+      });
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function limpiarFormularioSucursal() {
+    document.getElementById("form-sucursal").reset();
+    document.getElementById("suc-id").value = "";
+    document.getElementById("suc-url-ubi").value = "";
+    document.getElementById("btn-actualizar-suc").disabled = true;
+  }
+
+  async function guardarSucursal(esActualizacion) {
+    const nombre = document.getElementById("suc-nombre").value.trim();
+    const celular = document.getElementById("suc-celular").value.trim();
+    const ubicacion = document.getElementById("suc-ubicacion").value.trim();
+    const urlUbi = document.getElementById("suc-url-ubi").value.trim();
+    if (!nombre || !celular) { mostrarMensaje(MENSAJES.CAMPOS_INCOMPLETOS, "error"); return; }
+
+    const mensajeConfirmacion = esActualizacion
+      ? `¿Está de acuerdo con editar la sucursal "${nombre}"?`
+      : `¿Está de acuerdo con registrar la sucursal "${nombre}"?`;
+    if (!confirmarAccion(mensajeConfirmacion)) return;
+
+    const admin = await AdministradorService.obtenerAdminActual();
+    const idAdmin = admin ? admin.id_admin : null;
+    const idExistente = document.getElementById("suc-id").value;
+
+    const { error } = esActualizacion && idExistente
+      ? await SucursalRedesService.actualizarSucursal(idExistente, nombre, celular, ubicacion, urlUbi, idAdmin)
+      : await SucursalRedesService.crearSucursal(nombre, celular, ubicacion, urlUbi, idAdmin);
+
+    if (error) { mostrarMensaje("No se pudo guardar la sucursal.", "error"); return; }
+
+    mostrarMensaje(MENSAJES.GUARDADO_EXITO, "exito");
+    limpiarFormularioSucursal();
+    await cargarSucursales();
+  }
+
+  /* =========================================================
+     REDES SOCIALES
+     ========================================================= */
+
+  async function cargarRedes() {
+    const { data, error } = await SucursalRedesService.listarRedes();
+    const tbody = document.getElementById("tabla-redes");
+    tbody.innerHTML = "";
+
+    if (error || !data || data.length === 0) {
+      tbody.innerHTML = `<tr class="admin-empty-row"><td colspan="3">Sin redes sociales registradas.</td></tr>`;
+      return;
+    }
+
+    data.forEach((r) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${r.nom_red}</td>
+        <td>${r.url_red}</td>
+        <td>
+          <button class="btn-mini edit">Editar</button>
+          <button class="btn-mini danger">Eliminar</button>
+        </td>`;
+
+      tr.querySelector(".edit").addEventListener("click", () => {
+        document.getElementById("red-id").value = r.id_red;
+        document.getElementById("red-nombre").value = r.nom_red;
+        document.getElementById("red-url").value = r.url_red;
+        document.getElementById("btn-actualizar-red").disabled = false;
+        document.getElementById("form-red").scrollIntoView({ behavior: "smooth" });
+      });
+
+      tr.querySelector(".danger").addEventListener("click", async () => {
+        if (!confirmarAccion(`¿Está de acuerdo con eliminar la red social "${r.nom_red}"?`)) return;
+        const { error } = await SucursalRedesService.eliminarRed(r.id_red);
+        if (error) { mostrarMensaje("No se pudo eliminar.", "error"); return; }
+        mostrarMensaje(MENSAJES.ELIMINADO_EXITO, "exito");
+        cargarRedes();
+      });
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function limpiarFormularioRed() {
+    document.getElementById("form-red").reset();
+    document.getElementById("red-id").value = "";
+    document.getElementById("btn-actualizar-red").disabled = true;
+  }
+
+  async function guardarRed(esActualizacion) {
+    const nombre = document.getElementById("red-nombre").value.trim();
+    const url = document.getElementById("red-url").value.trim();
+    if (!nombre || !url) { mostrarMensaje(MENSAJES.CAMPOS_INCOMPLETOS, "error"); return; }
+
+    const mensajeConfirmacion = esActualizacion
+      ? `¿Está de acuerdo con editar la red social "${nombre}"?`
+      : `¿Está de acuerdo con registrar la red social "${nombre}"?`;
+    if (!confirmarAccion(mensajeConfirmacion)) return;
+
+    const admin = await AdministradorService.obtenerAdminActual();
+    const idAdmin = admin ? admin.id_admin : null;
+    const idExistente = document.getElementById("red-id").value;
+
+    const { error } = esActualizacion && idExistente
+      ? await SucursalRedesService.actualizarRed(idExistente, nombre, url, idAdmin)
+      : await SucursalRedesService.crearRed(nombre, url, idAdmin);
+
+    if (error) { mostrarMensaje("No se pudo guardar la red social.", "error"); return; }
+
+    mostrarMensaje(MENSAJES.GUARDADO_EXITO, "exito");
+    limpiarFormularioRed();
+    await cargarRedes();
+  }
+
+  /* =========================================================
+     COLORES
+     ========================================================= */
+
+  async function cargarColores() {
+    const { data, error } = await ColorService.listar();
+    const tbody = document.getElementById("tabla-colores");
+    tbody.innerHTML = "";
+
+    if (error || !data || data.length === 0) {
+      tbody.innerHTML = `<tr class="admin-empty-row"><td colspan="2">Sin colores registrados.</td></tr>`;
+      return;
+    }
+
+    data.forEach((c) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${c.nom_color}</td>
+        <td>
+          <button class="btn-mini edit">Editar</button>
+          <button class="btn-mini danger">Eliminar</button>
+        </td>`;
+
+      tr.querySelector(".edit").addEventListener("click", () => {
+        document.getElementById("color-id").value = c.id_color;
+        document.getElementById("color-nombre").value = c.nom_color;
+        document.getElementById("btn-actualizar-color").disabled = false;
+        document.getElementById("form-color").scrollIntoView({ behavior: "smooth" });
+      });
+
+      tr.querySelector(".danger").addEventListener("click", async () => {
+        if (!confirmarAccion(`¿Está de acuerdo con eliminar el color "${c.nom_color}"?`)) return;
+        const { error } = await ColorService.eliminar(c.id_color);
+        if (error) {
+          mostrarMensaje("No se pudo eliminar: este color está asignado a uno o más productos.", "error");
+          return;
+        }
+        mostrarMensaje(MENSAJES.ELIMINADO_EXITO, "exito");
+        cargarColores();
+      });
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function limpiarFormularioColor() {
+    document.getElementById("form-color").reset();
+    document.getElementById("color-id").value = "";
+    document.getElementById("btn-actualizar-color").disabled = true;
+  }
+
+  async function guardarColor(esActualizacion) {
+    const nombre = document.getElementById("color-nombre").value.trim();
+    if (!nombre) { mostrarMensaje(MENSAJES.CAMPOS_INCOMPLETOS, "error"); return; }
+
+    const mensajeConfirmacion = esActualizacion
+      ? `¿Está de acuerdo con editar el color "${nombre}"?`
+      : `¿Está de acuerdo con registrar el color "${nombre}"?`;
+    if (!confirmarAccion(mensajeConfirmacion)) return;
+
+    const idExistente = document.getElementById("color-id").value;
+
+    const { error } = esActualizacion && idExistente
+      ? await ColorService.actualizar(idExistente, nombre)
+      : await ColorService.crear(nombre);
+
+    if (error) { mostrarMensaje("No se pudo guardar el color.", "error"); return; }
+
+    mostrarMensaje(MENSAJES.GUARDADO_EXITO, "exito");
+    limpiarFormularioColor();
+    await cargarColores();
+  }
+
+</script>
+</body>
+</html>

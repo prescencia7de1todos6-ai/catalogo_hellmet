@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HELLMET — Parrillas</title>
+<meta name="view-transition" content="same-origin">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../../Assets/Css/variables.css">
+<link rel="stylesheet" href="../../Assets/Css/public.css">
+</head>
+<body>
+
+<div id="header-container"></div>
+
+<div class="category-hero">
+  <span class="eyebrow">CATEGORÍA</span>
+  <h1 id="category-name"></h1>
+  <p id="category-description"></p>
+</div>
+
+<div class="category-select-wrap" id="category-select-wrap" style="display:none;">
+  <label for="category-select">Buscar producto en esta categoría</label>
+  <select id="category-select"></select>
+</div>
+
+<div class="product-grid" id="product-grid"></div>
+
+<div class="category-empty-state" id="category-empty-state" style="display:none;">
+  No hay productos para mostrar en esta categoría todavía.
+</div>
+
+<div id="footer-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../Services/Supabase.js"></script>
+<script src="../../Utils/mensajes.js"></script>
+<script src="../../Services/Categoria.js"></script>
+<script src="../../Services/Productos.js"></script>
+<script src="../../Services/Sucursal_redes.js"></script>
+<script src="../../Componentes/Header.js"></script>
+<script src="../../Componentes/Footer.js"></script>
+<script src="../../Assets/Js/categoria-publica.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    renderHeader("../../Assets", "../../index.html");
+    renderFooter();
+    inicializarPaginaCategoria("PARRILLAS", "Parrillas para negocios y uso doméstico.");
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HELLMET — Productos</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../Assets/Css/variables.css">
+<link rel="stylesheet" href="../Assets/Css/admin-layout.css">
+<link rel="stylesheet" href="../Assets/Css/productos-admin.css">
+</head>
+<body>
+
+<div class="admin-layout">
+  <div id="navbar-container"></div>
+
+  <main class="admin-main">
+    <h2>Producto</h2>
+
+    <div class="admin-field" style="max-width:280px; margin-bottom:16px;">
+      <label for="prod-filtro-categoria">Categoría</label>
+      <select id="prod-filtro-categoria"></select>
+    </div>
+
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>Nombre</th><th>Precio</th><th>Acciones</th></tr></thead>
+        <tbody id="tabla-productos"></tbody>
+      </table>
+    </div>
+
+    <div class="admin-form-card">
+      <h3>Datos del producto</h3>
+      <form id="form-producto">
+        <input type="hidden" id="prod-id">
+        <div class="admin-form-grid">
+          <div class="admin-field">
+            <label for="prod-nombre">Nombre</label>
+            <input type="text" id="prod-nombre" required>
+          </div>
+          <div class="admin-field">
+            <label for="prod-precio">Precio (Bs)</label>
+            <input type="number" step="0.01" id="prod-precio" required>
+          </div>
+          <div class="admin-field">
+            <label for="prod-categoria">Categoría</label>
+            <select id="prod-categoria" required></select>
+          </div>
+          <div class="admin-field">
+            <label for="prod-alto">Alto (cm)</label>
+            <input type="number" step="0.01" id="prod-alto">
+          </div>
+          <div class="admin-field">
+            <label for="prod-ancho">Ancho (cm)</label>
+            <input type="number" step="0.01" id="prod-ancho">
+          </div>
+          <div class="admin-field">
+            <label for="prod-largo">Largo (cm)</label>
+            <input type="number" step="0.01" id="prod-largo">
+          </div>
+          <div class="admin-field">
+            <label for="prod-garantia">Garantía</label>
+            <select id="prod-garantia">
+              <option value="true">Sí</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+        </div>
+
+        <h3>Características</h3>
+        <div class="features-columns">
+          <div>
+            <p>Generales (reutilizables)</p>
+            <div class="features-list" id="lista-elementos-generales"></div>
+          </div>
+          <div>
+            <p>Colores</p>
+            <div class="features-list" id="lista-colores"></div>
+          </div>
+          <div>
+            <p>Específicos (solo de este producto)</p>
+            <div class="features-list" id="lista-datos-especificos">
+              <div class="specific-add-row">
+                <input type="text" id="especifico-etiqueta" placeholder="Etiqueta (ej: Voltaje)">
+                <input type="text" id="especifico-valor" placeholder="Valor (ej: 220V)">
+                <button type="button" class="admin-btn ghost" id="btn-add-especifico">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h3>Imágenes para el carrusel <span style="font-weight:400; font-size:0.8rem; color:var(--text-dim);">(máximo 10)</span></h3>
+        <div class="image-slots" id="image-slots"></div>
+        <p class="image-slots-hint" id="image-slots-count">0 / 10 imágenes</p>
+
+        <div class="admin-form-actions">
+          <button type="submit" class="admin-btn primary" id="btn-registrar">Registrar</button>
+          <button type="button" class="admin-btn secondary" id="btn-actualizar" disabled>Actualizar</button>
+          <button type="button" class="admin-btn ghost" id="btn-limpiar">Limpiar</button>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../Services/Supabase.js"></script>
+<script src="../Utils/mensajes.js"></script>
+<script src="../Services/Administrador.js"></script>
+<script src="../Services/Categoria.js"></script>
+<script src="../Services/Productos.js"></script>
+<script src="../Services/Sucursal_redes.js"></script>
+<script src="../Componentes/Navbar.js"></script>
+<script>
+  const LIMITE_IMAGENES = 10;
+  const estado = { imagenes: [], elementosVinculados: new Set(), coloresVinculados: new Set(), datosExtraPendientes: [] };
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    await AdministradorService.protegerPagina();
+    await renderNavbar("productos");
+    await cargarCategoriasEnSelects();
+    await cargarElementosGenerales(null);
+    await cargarColores(null);
+    renderSlotsImagenes();
+
+    document.getElementById("prod-filtro-categoria").addEventListener("change", cargarProductos);
+    document.getElementById("btn-limpiar").addEventListener("click", limpiarFormulario);
+    document.getElementById("btn-add-especifico").addEventListener("click", agregarEspecifico);
+    document.getElementById("form-producto").addEventListener("submit", (e) => { e.preventDefault(); guardarProducto(false); });
+    document.getElementById("btn-actualizar").addEventListener("click", () => guardarProducto(true));
+
+    document.getElementById("btn-limpiar-color").addEventListener("click", limpiarFormularioColor);
+    document.getElementById("form-color").addEventListener("submit", (e) => { e.preventDefault(); guardarColor(false); });
+    document.getElementById("btn-actualizar-color").addEventListener("click", () => guardarColor(true));
+    await cargarProductos();
+
+    // Si venimos del Dashboard con ?categoria=...&producto=..., precargar directo
+    const params = new URLSearchParams(window.location.search);
+    const idProdUrl = params.get("producto");
+    const idCateUrl = params.get("categoria");
+    if (idCateUrl) document.getElementById("prod-filtro-categoria").value = idCateUrl;
+    if (idProdUrl) await cargarProductoEnFormulario(idProdUrl);
+  });
+
+  /* ---------------- CATEGORIAS ---------------- */
+
+  async function cargarCategoriasEnSelects() {
+    const { data, error } = await CategoriaService.listar();
+    if (error || !data) return;
+
+    [document.getElementById("prod-filtro-categoria"), document.getElementById("prod-categoria")].forEach((sel) => {
+      sel.innerHTML = data.map((c) => `<option value="${c.id_cate}">${c.nom_cate}</option>`).join("");
+    });
+  }
+
+  /* ---------------- TABLA DE PRODUCTOS ---------------- */
+
+  async function cargarProductos() {
+    const idCategoria = document.getElementById("prod-filtro-categoria").value;
+    const { data, error } = await ProductosService.listarPorCategoria(idCategoria);
+    const tbody = document.getElementById("tabla-productos");
+    tbody.innerHTML = "";
+
+    if (error || !data || data.length === 0) {
+      tbody.innerHTML = `<tr class="admin-empty-row"><td colspan="3">No hay productos registrados en esta categoría.</td></tr>`;
+      return;
+    }
+
+    data.forEach((p) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${p.nom_prod}</td>
+        <td>Bs ${Number(p.precio).toFixed(2)}</td>
+        <td>
+          <button class="btn-mini edit">Editar</button>
+          <button class="btn-mini danger">${p.activo === false ? "Habilitar" : "Inhabilitar"}</button>
+        </td>`;
+      tr.querySelector(".edit").addEventListener("click", () => cargarProductoEnFormulario(p.id_prod));
+      tr.querySelector(".danger").addEventListener("click", async () => {
+        const vaAInhabilitar = p.activo !== false;
+        const mensaje = vaAInhabilitar
+          ? `¿Está de acuerdo con eliminar "${p.nom_prod}" del catálogo?`
+          : `¿Está de acuerdo con volver a habilitar "${p.nom_prod}" en el catálogo?`;
+        if (!confirmarAccion(mensaje)) return;
+
+        if (vaAInhabilitar) await ProductosService.inhabilitar(p.id_prod);
+        else await ProductosService.habilitar(p.id_prod);
+        cargarProductos();
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  /* ---------------- CARACTERÍSTICAS GENERALES ---------------- */
+
+  async function cargarElementosGenerales(idProdActual) {
+    const cont = document.getElementById("lista-elementos-generales");
+    const { data: elementos } = await ProductosService.listarElementos();
+
+    let vinculados = new Set();
+    if (idProdActual) {
+      const { data: prod } = await ProductosService.obtenerPorId(idProdActual);
+      if (prod && prod.producto_elemento) {
+        vinculados = new Set(prod.producto_elemento.map((pe) => pe.elemento.id_elem));
+      }
+    }
+    estado.elementosVinculados = vinculados;
+
+    cont.innerHTML = "";
+    (elementos || []).forEach((el) => {
+      const row = document.createElement("label");
+      row.className = "feature-row";
+      row.innerHTML = `<input type="checkbox" data-id="${el.id_elem}" ${vinculados.has(el.id_elem) ? "checked" : ""}> ${el.nom_elem}`;
+      row.querySelector("input").addEventListener("change", async (e) => {
+        const idProd = document.getElementById("prod-id").value;
+        if (e.target.checked) {
+          estado.elementosVinculados.add(el.id_elem);
+          if (idProd) await ProductosService.vincularElemento(idProd, el.id_elem);
+        } else {
+          estado.elementosVinculados.delete(el.id_elem);
+          if (idProd) await ProductosService.desvincularElemento(idProd, el.id_elem);
+        }
+      });
+      cont.appendChild(row);
+    });
+  }
+
+  /* ---------------- COLORES ---------------- */
+
+  async function cargarColores(idProdActual) {
+    const cont = document.getElementById("lista-colores");
+    const { data: colores } = await ProductosService.listarColores();
+
+    let vinculados = new Set();
+    if (idProdActual) {
+      const { data: prod } = await ProductosService.obtenerPorId(idProdActual);
+      if (prod && prod.producto_color) {
+        vinculados = new Set(prod.producto_color.map((pc) => pc.color.id_color));
+      }
+    }
+    estado.coloresVinculados = vinculados;
+
+    cont.innerHTML = "";
+    (colores || []).forEach((el) => {
+      const row = document.createElement("label");
+      row.className = "feature-row";
+      row.innerHTML = `<input type="checkbox" data-id="${el.id_color}" ${vinculados.has(el.id_color) ? "checked" : ""}> ${el.nom_color}`;
+      row.querySelector("input").addEventListener("change", async (e) => {
+        const idProd = document.getElementById("prod-id").value;
+        if (e.target.checked) {
+          estado.coloresVinculados.add(el.id_color);
+          if (idProd) await ProductosService.vincularColor(idProd, el.id_color);
+        } else {
+          estado.coloresVinculados.delete(el.id_color);
+          if (idProd) await ProductosService.desvincularColor(idProd, el.id_color);
+        }
+      });
+      cont.appendChild(row);
+    });
+  }
+
+  /* ---------------- CARACTERÍSTICAS ESPECÍFICAS (varios, editables) ---------------- */
+
+  async function cargarDatosEspecificos(idProdActual) {
+    const lista = document.getElementById("lista-datos-especificos");
+    const filaAgregar = lista.querySelector(".specific-add-row");
+    lista.querySelectorAll(".feature-row").forEach((n) => n.remove());
+
+    if (idProdActual) {
+      // Producto ya existe: se traen sus datos extra reales, cada uno editable
+      const { data: prod } = await ProductosService.obtenerPorId(idProdActual);
+      (prod?.dato_extra || []).forEach((d) => {
+        lista.insertBefore(crearFilaEspecificoGuardado(d), filaAgregar);
+      });
+    } else {
+      // Producto todavía no existe: se muestran los que se han ido agregando en memoria
+      estado.datosExtraPendientes.forEach((d, indice) => {
+        lista.insertBefore(crearFilaEspecificoPendiente(d, indice), filaAgregar);
+      });
+    }
+  }
+
+  /** Fila editable para un dato extra que YA está guardado en Supabase. */
+  function crearFilaEspecificoGuardado(d) {
+    const row = document.createElement("div");
+    row.className = "feature-row feature-row-editable";
+    row.innerHTML = `
+      <input type="text" class="especifico-input-etiqueta" value="${d.etiqueta}">
+      <input type="text" class="especifico-input-valor" value="${d.valor}">
+      <button type="button" class="remove-btn" title="Eliminar">✕</button>
+    `;
+
+    const inputEtiqueta = row.querySelector(".especifico-input-etiqueta");
+    const inputValor = row.querySelector(".especifico-input-valor");
+
+    // Se guarda solo al salir del campo (blur), para no mandar una consulta por cada letra
+    const guardarCambios = async () => {
+      const nuevaEtiqueta = inputEtiqueta.value.trim();
+      const nuevoValor = inputValor.value.trim();
+      if (!nuevaEtiqueta || !nuevoValor) { mostrarMensaje(MENSAJES.CAMPOS_INCOMPLETOS, "error"); return; }
+      if (nuevaEtiqueta === d.etiqueta && nuevoValor === d.valor) return; // sin cambios, no gasta consulta
+      await ProductosService.actualizarDatoExtra(d.id_dat_ext, nuevaEtiqueta, nuevoValor);
+      d.etiqueta = nuevaEtiqueta;
+      d.valor = nuevoValor;
+    };
+    inputEtiqueta.addEventListener("blur", guardarCambios);
+    inputValor.addEventListener("blur", guardarCambios);
+
+    row.querySelector(".remove-btn").addEventListener("click", async () => {
+      await ProductosService.eliminarDatoExtra(d.id_dat_ext);
+      row.remove();
+    });
+
+    return row;
+  }
+
+  /** Fila editable para un dato extra que aún NO se ha guardado (producto sin registrar todavía). */
+  function crearFilaEspecificoPendiente(d, indice) {
+    const row = document.createElement("div");
+    row.className = "feature-row feature-row-editable";
+    row.innerHTML = `
+      <input type="text" class="especifico-input-etiqueta" value="${d.etiqueta}">
+      <input type="text" class="especifico-input-valor" value="${d.valor}">
+      <button type="button" class="remove-btn" title="Eliminar">✕</button>
+    `;
+
+    row.querySelector(".especifico-input-etiqueta").addEventListener("input", (e) => {
+      estado.datosExtraPendientes[indice].etiqueta = e.target.value.trim();
+    });
+    row.querySelector(".especifico-input-valor").addEventListener("input", (e) => {
+      estado.datosExtraPendientes[indice].valor = e.target.value.trim();
+    });
+    row.querySelector(".remove-btn").addEventListener("click", () => {
+      estado.datosExtraPendientes.splice(indice, 1);
+      cargarDatosEspecificos(null); // se vuelve a numerar la lista en memoria
+    });
+
+    return row;
+  }
+
+  /** Botón "+": agrega tantos datos extra como el usuario quiera, uno tras otro. */
+  async function agregarEspecifico() {
+    const inputEtiqueta = document.getElementById("especifico-etiqueta");
+    const inputValor = document.getElementById("especifico-valor");
+    const etiqueta = inputEtiqueta.value.trim();
+    const valor = inputValor.value.trim();
+    if (!etiqueta || !valor) { mostrarMensaje(MENSAJES.CAMPOS_INCOMPLETOS, "error"); return; }
+
+    const idProd = document.getElementById("prod-id").value;
+
+    if (idProd) {
+      // Producto ya existe: se guarda directo en Supabase
+      await ProductosService.crearDatoExtra(etiqueta, valor, idProd);
+      await cargarDatosEspecificos(idProd);
+    } else {
+      // Producto nuevo: se guarda en memoria, se sube todo junto al Registrar
+      estado.datosExtraPendientes.push({ etiqueta, valor });
+      await cargarDatosEspecificos(null);
+    }
+
+    inputEtiqueta.value = "";
+    inputValor.value = "";
+    inputEtiqueta.focus(); // listo para seguir agregando el siguiente sin hacer clic de nuevo
+  }
+
+  /* ---------------- IMÁGENES ---------------- */
+
+  function renderSlotsImagenes() {
+    const cont = document.getElementById("image-slots");
+    cont.innerHTML = "";
+
+    estado.imagenes.forEach((img, i) => {
+      const slot = document.createElement("div");
+      slot.className = "image-slot";
+      const src = img.url || (img.file ? URL.createObjectURL(img.file) : "");
+      slot.innerHTML = `<img src="${src}" alt="Imagen ${i + 1}"><button type="button" class="slot-remove">✕</button>`;
+      slot.querySelector(".slot-remove").addEventListener("click", async () => {
+        if (img.id_img) await ProductosService.eliminarImagen(img.id_img);
+        estado.imagenes.splice(i, 1);
+        renderSlotsImagenes();
+      });
+      cont.appendChild(slot);
+    });
+
+    if (estado.imagenes.length < LIMITE_IMAGENES) {
+      const slot = document.createElement("div");
+      slot.className = "image-slot";
+      slot.innerHTML = `<button type="button" class="slot-add">+</button><input type="file" accept="image/*" style="display:none">`;
+      const input = slot.querySelector("input");
+      slot.querySelector(".slot-add").addEventListener("click", () => input.click());
+      input.addEventListener("change", async () => {
+        if (!input.files[0]) return;
+        const idProd = document.getElementById("prod-id").value;
+        if (idProd) {
+          const orden = estado.imagenes.length + 1;
+          const { data } = await ProductosService.subirImagen(input.files[0], idProd, orden);
+          estado.imagenes.push({ url: URL.createObjectURL(input.files[0]), id_img: data });
+        } else {
+          estado.imagenes.push({ file: input.files[0] });
+        }
+        renderSlotsImagenes();
+      });
+      cont.appendChild(slot);
+    }
+
+    document.getElementById("image-slots-count").textContent = `${estado.imagenes.length} / ${LIMITE_IMAGENES} imágenes`;
+  }
+
+  /* ---------------- FORMULARIO: EDITAR / LIMPIAR / GUARDAR ---------------- */
+
+  async function cargarProductoEnFormulario(idProd) {
+    const { data: p } = await ProductosService.obtenerPorId(idProd);
+    if (!p) return;
+
+    document.getElementById("prod-id").value = p.id_prod;
+    document.getElementById("prod-nombre").value = p.nom_prod;
+    document.getElementById("prod-precio").value = p.precio;
+    document.getElementById("prod-categoria").value = p.id_cate;
+    document.getElementById("prod-alto").value = p.alto || "";
+    document.getElementById("prod-ancho").value = p.ancho || "";
+    document.getElementById("prod-largo").value = p.largo || "";
+    document.getElementById("prod-garantia").value = p.garantia === false ? "false" : "true";
+
+    estado.imagenes = (p.img_producto || [])
+      .sort((a, b) => (a.orden || 0) - (b.orden || 0))
+      .map((img) => ({ url: img.url_img, id_img: img.id_img }));
+
+    await cargarElementosGenerales(idProd);
+    await cargarColores(idProd);
+    estado.datosExtraPendientes = [];
+    await cargarDatosEspecificos(idProd);
+    renderSlotsImagenes();
+
+    document.getElementById("btn-actualizar").disabled = false; // Registrar sigue habilitado siempre
+    document.getElementById("form-producto").scrollIntoView({ behavior: "smooth" });
+  }
+
+  function limpiarFormulario() {
+    document.getElementById("form-producto").reset();
+    document.getElementById("prod-id").value = "";
+    estado.imagenes = [];
+    estado.elementosVinculados = new Set();
+    estado.coloresVinculados = new Set();
+    estado.datosExtraPendientes = [];
+    document.getElementById("btn-actualizar").disabled = true;
+    cargarElementosGenerales(null);
+    cargarColores(null);
+    cargarDatosEspecificos(null);
+    renderSlotsImagenes();
+  }
+
+  async function guardarProducto(esActualizacion) {
+    const nombre = document.getElementById("prod-nombre").value.trim();
+    const precio = parseFloat(document.getElementById("prod-precio").value);
+    if (!nombre || isNaN(precio)) { mostrarMensaje(MENSAJES.CAMPOS_INCOMPLETOS, "error"); return; }
+
+    const mensajeConfirmacion = esActualizacion
+      ? `¿Está de acuerdo con editar este producto? "${nombre}"`
+      : `¿Está de acuerdo con ingresar este producto en el catálogo? "${nombre}"`;
+    if (!confirmarAccion(mensajeConfirmacion)) return;
+
+    const admin = await AdministradorService.obtenerAdminActual();
+
+    const datos = {
+      nom_prod: nombre,
+      precio: precio,
+      id_cate: document.getElementById("prod-categoria").value,
+      id_admin: admin ? admin.id_admin : null,
+      garantia: document.getElementById("prod-garantia").value === "true",
+      alto: parseFloat(document.getElementById("prod-alto").value) || null,
+      ancho: parseFloat(document.getElementById("prod-ancho").value) || null,
+      largo: parseFloat(document.getElementById("prod-largo").value) || null,
+    };
+
+    const idExistente = document.getElementById("prod-id").value;
+
+    if (esActualizacion && idExistente) {
+      const { error } = await ProductosService.actualizar(idExistente, datos);
+      if (error) { mostrarMensaje("No se pudo actualizar el producto.", "error"); return; }
+      mostrarMensaje(MENSAJES.GUARDADO_EXITO, "exito");
+    } else {
+      const { data: nuevoId, error } = await ProductosService.crear(datos);
+      if (error) { mostrarMensaje("No se pudo registrar el producto.", "error"); return; }
+
+      for (const idElem of estado.elementosVinculados) {
+        await ProductosService.vincularElemento(nuevoId, idElem);
+      }
+      for (const idColor of estado.coloresVinculados) {
+        await ProductosService.vincularColor(nuevoId, idColor);
+      }
+      for (const d of estado.datosExtraPendientes) {
+        await ProductosService.crearDatoExtra(d.etiqueta, d.valor, nuevoId);
+      }
+      let orden = 1;
+      for (const img of estado.imagenes) {
+        if (img.file) await ProductosService.subirImagen(img.file, nuevoId, orden);
+        orden++;
+      }
+      mostrarMensaje(MENSAJES.GUARDADO_EXITO, "exito");
+    }
+
+    limpiarFormulario();
+    await cargarProductos();
+  }
+</script>
+</body>
+</html>

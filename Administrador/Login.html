@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HELLMET — Acceso administrador</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../Assets/Css/variables.css">
+<link rel="stylesheet" href="../Assets/Css/login.css">
+</head>
+<body class="login-page">
+
+  <div class="login-card">
+    <div class="login-form-side">
+      <h1>HELLMET</h1>
+      <p class="login-subtitle">Acceso exclusivo para administradores</p>
+
+      <form id="form-login" novalidate>
+        <div class="login-field">
+          <label for="usuario">Usuario</label>
+          <input type="text" id="usuario" name="usuario" autocomplete="username" required>
+        </div>
+        <div class="login-field">
+          <label for="contrasena">Contraseña</label>
+          <input type="password" id="contrasena" name="contrasena" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="login-submit" id="btn-login">Ingresar</button>
+      </form>
+    </div>
+
+    <div class="login-visual-side">
+      <div class="wave-bg" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <div class="login-logo-badge">
+        <img src="../Assets/Img/logo_hellmet.png" alt="Logo HELLMET">
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../Services/Supabase.js"></script>
+  <script src="../Utils/mensajes.js"></script>
+  <script src="../Services/Administrador.js"></script>
+  <script>
+    const formLogin = document.getElementById("form-login");
+    const btnLogin = document.getElementById("btn-login");
+
+    formLogin.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const usuario = document.getElementById("usuario").value.trim();
+      const contrasena = document.getElementById("contrasena").value;
+
+      if (!usuario || !contrasena) {
+        mostrarMensaje(MENSAJES.CAMPOS_INCOMPLETOS, "error");
+        return;
+      }
+
+      btnLogin.disabled = true;
+      btnLogin.textContent = "Ingresando...";
+
+      // Login directo contra la tabla "administrador" (usuario/contraseña propios)
+      const { data, error } = await AdministradorService.iniciarSesion(usuario, contrasena);
+
+      btnLogin.disabled = false;
+      btnLogin.textContent = "Ingresar";
+
+      if (error) {
+        mostrarMensaje(error, "error");
+        return;
+      }
+
+      mostrarMensaje("Conexión exitosa. Iniciando sesión...", "exito", 2000);
+      setTimeout(() => { window.location.href = "Dashboard.html"; }, 800);
+    });
+  </script>
+</body>
+</html>

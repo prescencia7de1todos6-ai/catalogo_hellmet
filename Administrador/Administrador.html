@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HELLMET — Administrador</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../Assets/Css/variables.css">
+<link rel="stylesheet" href="../Assets/Css/admin-layout.css">
+</head>
+<body>
+
+<div class="admin-layout">
+  <div id="navbar-container"></div>
+
+  <main class="admin-main">
+    <h2>Administrador</h2>
+
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>Nombre</th><th>Apellido</th><th>Usuario</th><th>Contraseña</th><th>Acción</th></tr></thead>
+        <tbody id="tabla-administradores"></tbody>
+      </table>
+    </div>
+
+    <div class="admin-form-card">
+      <h3>Datos del administrador</h3>
+      <form id="form-administrador">
+        <input type="hidden" id="admin-id">
+        <div class="admin-form-grid">
+          <div class="admin-field">
+            <label for="admin-nombre">Nombre</label>
+            <input type="text" id="admin-nombre" required>
+          </div>
+          <div class="admin-field">
+            <label for="admin-apellido">Apellido</label>
+            <input type="text" id="admin-apellido" required>
+          </div>
+          <div class="admin-field">
+            <label for="admin-usuario">Usuario</label>
+            <input type="text" id="admin-usuario" required>
+          </div>
+          <div class="admin-field">
+            <label for="admin-contrasena">Contraseña</label>
+            <input type="password" id="admin-contrasena">
+          </div>
+          <div class="admin-field">
+            <label for="admin-confirmar">Confirmar contraseña</label>
+            <input type="password" id="admin-confirmar">
+          </div>
+        </div>
+        <p style="font-size:0.8rem; color:var(--text-dim); margin:-8px 0 16px;">
+          Al editar, deja la contraseña en blanco si no quieres cambiarla.
+        </p>
+        <div class="admin-form-actions">
+          <button type="submit" class="admin-btn primary" id="btn-registrar">Registrar</button>
+          <button type="button" class="admin-btn secondary" id="btn-actualizar" disabled>Actualizar</button>
+          <button type="button" class="admin-btn ghost" id="btn-limpiar">Limpiar</button>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../Services/Supabase.js"></script>
+<script src="../Utils/mensajes.js"></script>
+<script src="../Services/Administrador.js"></script>
+<script src="../Componentes/Navbar.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    await AdministradorService.protegerPagina();
+    await renderNavbar("administrador");
+    await cargarAdministradores();
+
+    document.getElementById("btn-limpiar").addEventListener("click", limpiarFormulario);
+    document.getElementById("form-administrador").addEventListener("submit", (e) => { e.preventDefault(); guardarAdministrador(false); });
+    document.getElementById("btn-actualizar").addEventListener("click", () => guardarAdministrador(true));
+  });
+
+  async function cargarAdministradores() {
+    const { data, error } = await AdministradorService.listar();
+    const tbody = document.getElementById("tabla-administradores");
+    tbody.innerHTML = "";
+
+    if (error || !data || data.length === 0) {
+      tbody.innerHTML = `<tr class="admin-empty-row"><td colspan="5">Sin administradores registrados.</td></tr>`;
+      return;
+    }
+
+    data.forEach((a) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${a.nom_admin}</td>
+        <td>${a.ape_admin}</td>
+        <td>${a.usuario || "—"}</td>
+        <td>
+          <span class="password-cell">
+            <span class="password-text">•••••••</span>
+            <button type="button" class="toggle-eye" title="Mostrar/ocultar">👁</button>
+          </span>
+        </td>
+        <td>
+          <button class="btn-mini edit">Editar</button>
+          <button class="btn-mini danger">Eliminar</button>
+        </td>`;
+
+      const textoContrasena = tr.querySelector(".password-text");
+      let visible = false;
+      tr.querySelector(".toggle-eye").addEventListener("click", () => {
+        visible = !visible;
+        textoContrasena.textContent = visible ? (a["contraseña"] || "") : "•••••••";
+      });
+
+      tr.querySelector(".edit").addEventListener("click", () => cargarAdminEnFormulario(a));
+
+      tr.querySelector(".danger").addEventListener("click", async () => {
+        if (!confirmarAccion(`¿Está de acuerdo con eliminar a "${a.nom_admin} ${a.ape_admin}" de los administradores?`)) return;
+        const { error } = await AdministradorService.eliminar(a.id_admin);
+        if (error) { mostrarMensaje("No se pudo eliminar (revisa si tiene productos o sucursales a su nombre).", "error"); return; }
+        mostrarMensaje(MENSAJES.ELIMINADO_EXITO, "exito");
+        cargarAdministradores();
+      });
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function cargarAdminEnFormulario(a) {
+    document.getElementById("admin-id").value = a.id_admin;
+    document.getElementById("admin-nombre").value = a.nom_admin;
+    document.getElementById("admin-apellido").value = a.ape_admin;
+    document.getElementById("admin-usuario").value = a.usuario || "";
+    document.getElementById("admin-contrasena").value = "";
+    document.getElementById("admin-confirmar").value = "";
+    document.getElementById("btn-actualizar").disabled = false;
+    document.getElementById("form-administrador").scrollIntoView({ behavior: "smooth" });
+  }
+
+  function limpiarFormulario() {
+    document.getElementById("form-administrador").reset();
+    document.getElementById("admin-id").value = "";
+    document.getElementById("btn-actualizar").disabled = true;
+  }
+
+  async function guardarAdministrador(esActualizacion) {
+    const nombre = document.getElementById("admin-nombre").value.trim();
+    const apellido = document.getElementById("admin-apellido").value.trim();
+    const usuario = document.getElementById("admin-usuario").value.trim();
+    const contrasena = document.getElementById("admin-contrasena").value;
+    const confirmar = document.getElementById("admin-confirmar").value;
+
+    if (!nombre || !apellido || !usuario) { mostrarMensaje(MENSAJES.CAMPOS_INCOMPLETOS, "error"); return; }
+    if (contrasena !== confirmar) { mostrarMensaje(MENSAJES.CONTRASENAS_NO_COINCIDEN, "error"); return; }
+    if (!esActualizacion && !contrasena) { mostrarMensaje(MENSAJES.CAMPOS_INCOMPLETOS, "error"); return; }
+
+    const idExistente = document.getElementById("admin-id").value;
+
+    if (esActualizacion && idExistente) {
+      if (!confirmarAccion(`¿Está de acuerdo con editar a "${nombre} ${apellido}"?`)) return;
+      const { error } = await AdministradorService.actualizar(idExistente, nombre, apellido, usuario, contrasena);
+      if (error) { mostrarMensaje("No se pudo actualizar.", "error"); return; }
+      mostrarMensaje(MENSAJES.GUARDADO_EXITO, "exito");
+    } else {
+      if (!confirmarAccion(`¿Está de acuerdo con registrar a "${nombre} ${apellido}" como administrador?`)) return;
+      const { error } = await AdministradorService.crear(nombre, apellido, usuario, contrasena);
+      if (error) { mostrarMensaje("No se pudo registrar.", "error"); return; }
+      mostrarMensaje(MENSAJES.GUARDADO_EXITO, "exito");
+    }
+
+    limpiarFormulario();
+    await cargarAdministradores();
+  }
+</script>
+</body>
+</html>

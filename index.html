@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HELLMET — Equipos de cocción</title>
+<meta name="view-transition" content="same-origin">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="Assets/Css/variables.css">
+<link rel="stylesheet" href="Assets/Css/public.css">
+<link rel="stylesheet" href="Assets/Css/home.css">
+<link rel="stylesheet" href="Assets/Css/hero-carousel.css">
+</head>
+<body>
+
+<div id="header-container"></div>
+
+<div id="hero-carousel-container"></div>
+
+<section class="home-intro">
+  <h2>EQUIPOS DE COCCIÓN HELLMET</h2>
+  <p>Bienvenidos</p>
+</section>
+
+<section class="home-category-grid">
+  <a href="Paginas/Categorias/Hornos.html" class="home-category-circle">
+    <span class="circle"></span>
+    <span>Hornos</span>
+  </a>
+  <a href="Paginas/Categorias/Parrillas.html" class="home-category-circle">
+    <span class="circle"></span>
+    <span>Parrillas</span>
+  </a>
+  <a href="Paginas/Categorias/Broasteras.html" class="home-category-circle">
+    <span class="circle"></span>
+    <span>Broasteras</span>
+  </a>
+  <a href="Paginas/Categorias/Cocinas.html" class="home-category-circle">
+    <span class="circle"></span>
+    <span>Cocinas</span>
+  </a>
+</section>
+
+<div id="footer-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="Services/Supabase.js"></script>
+<script src="Utils/mensajes.js"></script>
+<script src="Services/Sucursal_redes.js"></script>
+<script src="Componentes/Header.js"></script>
+<script src="Componentes/Footer.js"></script>
+<script src="Assets/Js/hero-carousel.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    renderHeader("Assets", "index.html");
+    renderFooter();
+    renderHeroCarousel("Assets");
+  });
+</script>
+</body>
+</html>

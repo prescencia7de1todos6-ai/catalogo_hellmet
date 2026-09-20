@@ -1,0 +1,141 @@
+/* =========================================================
+   HELLMET — Página de producto
+   Requiere variables.css y public.css cargados antes.
+   ========================================================= */
+
+.product-detail-grid {
+  max-width: var(--container);
+  margin: 120px auto 60px;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+@media (max-width: 800px) {
+  .product-detail-grid { grid-template-columns: 1fr; }
+}
+
+.product-carousel {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--bg-panel);
+}
+
+.carousel-track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.3s ease;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.carousel-slide {
+  min-width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  margin: auto;
+}
+
+.carousel-dots {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+
+.carousel-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.carousel-dots .dot.active { background: var(--accent-2); }
+
+.product-detail-info .eyebrow {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.product-detail-info h1 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  margin: 4px 0 20px;
+}
+
+.detail-block {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-block h3 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  margin: 0 0 8px;
+  color: var(--text-dim);
+}
+
+.detail-block ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.price-plate {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #F2EDE3;
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+}
+
+.share-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+}
+
+.share-bar input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.share-bar button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.copy-feedback {
+  font-size: 0.8rem;
+  color: var(--accent-2);
+  min-height: 1.2em;
+  margin: 6px 0 0;
+}

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HELLMET — Producto</title>
+<meta name="view-transition" content="same-origin">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../../Assets/Css/variables.css">
+<link rel="stylesheet" href="../../Assets/Css/public.css">
+<link rel="stylesheet" href="../../Assets/Css/producto.css">
+</head>
+<body>
+
+<div id="header-container"></div>
+
+<main id="producto-contenido" style="display:none;">
+  <div class="product-detail-grid">
+    <div class="product-carousel" id="carousel">
+      <div class="carousel-track" id="carousel-track"></div>
+      <div class="carousel-dots" id="carousel-dots"></div>
+    </div>
+
+    <div class="product-detail-info">
+      <span class="eyebrow" id="detail-eyebrow"></span>
+      <h1 id="detail-name"></h1>
+
+      <div class="detail-block" id="detail-dimensions-block" style="display:none;">
+        <h3>Medidas</h3>
+        <ul id="detail-dimensions"></ul>
+      </div>
+
+      <div class="detail-block">
+        <h3>Características</h3>
+        <ul id="detail-features"></ul>
+      </div>
+
+      <div class="detail-block">
+        <h3>Precio</h3>
+        <div class="price-plate" id="detail-price"></div>
+      </div>
+
+      <div class="share-bar">
+        <span>Enlace</span>
+        <input type="text" id="product-link" readonly>
+        <button id="copy-link-btn">Copiar</button>
+      </div>
+      <p class="copy-feedback" id="copy-feedback"></p>
+    </div>
+  </div>
+</main>
+
+<div id="producto-vacio" class="category-empty-state" style="display:none;">
+  Este producto no está disponible.
+  <br><a href="../Categorias/" style="color:var(--accent);">Volver al catálogo</a>
+</div>
+
+<div id="footer-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../Services/Supabase.js"></script>
+<script src="../../Utils/mensajes.js"></script>
+<script src="../../Services/Productos.js"></script>
+<script src="../../Services/Sucursal_redes.js"></script>
+<script src="../../Componentes/Header.js"></script>
+<script src="../../Componentes/Footer.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    renderHeader("../../Assets", "../../index.html");
+    renderFooter();
+    await cargarProducto();
+  });
+
+  function obtenerIdProductoDeUrl() {
+    return new URLSearchParams(window.location.search).get("producto");
+  }
+
+  let imagenesProducto = [];
+  let indiceActual = 0;
+
+  async function cargarProducto() {
+    const idProd = obtenerIdProductoDeUrl();
+    if (!idProd) { mostrarVacio(); return; }
+
+    const { data: producto, error } = await ProductosService.obtenerPublicoPorId(idProd);
+    if (error || !producto) { mostrarVacio(); return; }
+
+    document.title = `HELLMET — ${producto.nom_prod}`;
+    document.getElementById("detail-eyebrow").textContent = producto.categoria ? producto.categoria.nom_cate : "";
+    document.getElementById("detail-name").textContent = producto.nom_prod;
+
+    const dimBlock = document.getElementById("detail-dimensions-block");
+    const dims = [
+      producto.alto ? `Alto: ${producto.alto} cm` : null,
+      producto.ancho ? `Ancho: ${producto.ancho} cm` : null,
+      producto.largo ? `Largo: ${producto.largo} cm` : null,
+    ].filter(Boolean);
+    if (dims.length > 0) {
+      dimBlock.style.display = "";
+      document.getElementById("detail-dimensions").innerHTML = dims.map((d) => `<li>${d}</li>`).join("");
+    }
+
+    // Generales primero, específicos debajo
+    const caracteristicas = [
+      ...(producto.producto_elemento || []).map((pe) => pe.elemento.nom_elem),
+      ...(producto.dato_extra || []).map((d) => `${d.etiqueta}: ${d.valor}`),
+    ];
+    document.getElementById("detail-features").innerHTML = caracteristicas.map((f) => `<li>${f}</li>`).join("")
+      || `<li>Sin características registradas.</li>`;
+
+    document.getElementById("detail-price").textContent = `Bs ${producto.precio}`;
+
+    const linkInput = document.getElementById("product-link");
+    linkInput.value = window.location.href;
+
+    imagenesProducto = (producto.img_producto || [])
+      .sort((a, b) => (a.orden || 0) - (b.orden || 0))
+      .map((i) => i.url_img);
+    renderCarrusel();
+
+    document.getElementById("producto-contenido").style.display = "";
+    document.getElementById("copy-link-btn").addEventListener("click", copiarEnlace);
+  }
+
+  function mostrarVacio() {
+    document.getElementById("producto-vacio").style.display = "";
+    mostrarMensaje(MENSAJES.PAGINA_INEXISTENTE, "error");
+  }
+
+  function renderCarrusel() {
+    const track = document.getElementById("carousel-track");
+    const dots = document.getElementById("carousel-dots");
+    if (imagenesProducto.length === 0) {
+      track.innerHTML = `<div class="carousel-slide"><span>Sin imágenes</span></div>`;
+      return;
+    }
+    track.innerHTML = imagenesProducto.map((url) => `
+      <div class="carousel-slide"><img src="${url}" alt=""></div>
+    `).join("");
+    dots.innerHTML = imagenesProducto.map((_, i) => `<span class="dot ${i === 0 ? "active" : ""}"></span>`).join("");
+
+    let startX = 0;
+    track.addEventListener("pointerdown", (e) => { startX = e.clientX; });
+    track.addEventListener("pointerup", (e) => {
+      const delta = e.clientX - startX;
+      if (delta > 40) moverCarrusel(-1);
+      else if (delta < -40) moverCarrusel(1);
+    });
+  }
+
+  function moverCarrusel(direccion) {
+    if (imagenesProducto.length === 0) return;
+    indiceActual = (indiceActual + direccion + imagenesProducto.length) % imagenesProducto.length;
+    const track = document.getElementById("carousel-track");
+    track.style.transform = `translateX(-${indiceActual * 100}%)`;
+    document.querySelectorAll(".carousel-dots .dot").forEach((d, i) => d.classList.toggle("active", i === indiceActual));
+  }
+
+  function copiarEnlace() {
+    const input = document.getElementById("product-link");
+    input.select();
+    navigator.clipboard.writeText(input.value).then(() => {
+      document.getElementById("copy-feedback").textContent = "¡Enlace copiado!";
+      setTimeout(() => { document.getElementById("copy-feedback").textContent = ""; }, 2000);
+    }).catch(() => {
+      document.execCommand("copy");
+    });
+  }
+</script>
+</body>
+</html>

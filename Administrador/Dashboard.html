@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HELLMET — Dashboard</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../Assets/Css/variables.css">
+<link rel="stylesheet" href="../Assets/Css/admin-layout.css">
+<link rel="stylesheet" href="../Assets/Css/dashboard.css">
+</head>
+<body>
+
+<div class="admin-layout">
+  <div id="navbar-container"></div>
+
+  <main class="admin-main">
+    <h2>General</h2>
+    <a href="../index.html" class="dashboard-link" target="_blank">Ver página →</a>
+
+    <div class="dashboard-grid">
+      <div class="dashboard-card">
+        <h3>Administradores</h3>
+        <div class="dashboard-people-list" id="dash-administradores">
+          <span class="dashboard-empty">Cargando...</span>
+        </div>
+      </div>
+      <div class="dashboard-card">
+        <h3>Sucursales</h3>
+        <div class="dashboard-people-list" id="dash-sucursales">
+          <span class="dashboard-empty">Cargando...</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-card" style="margin-bottom:24px;">
+      <h3>Redes Sociales</h3>
+      <div class="dashboard-people-list" id="dash-redes">
+        <span class="dashboard-empty">Cargando...</span>
+      </div>
+    </div>
+
+    <div class="dashboard-card">
+      <h3>Productos por categoría</h3>
+      <div id="dash-categorias">
+        <span class="dashboard-empty">Cargando...</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../Services/Supabase.js"></script>
+<script src="../Utils/mensajes.js"></script>
+<script src="../Services/Administrador.js"></script>
+<script src="../Services/Categoria.js"></script>
+<script src="../Services/Productos.js"></script>
+<script src="../Services/Sucursal_redes.js"></script>
+<script src="../Componentes/Navbar.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    await AdministradorService.protegerPagina();
+    await renderNavbar("dashboard");
+    await cargarAdministradores();
+    await cargarSucursales();
+    await cargarRedes();
+    await cargarCategoriasConConteo();
+  });
+
+  /* =========================================================
+     CONEXIÓN A LA BASE DE DATOS — aquí es donde se piden los
+     datos reales. Cada bloque usa el Service correspondiente
+     (Services/Administrador.js, Categoria.js, Productos.js,
+     Sucursal_redes.js) en vez de hablar con Supabase directo.
+     ========================================================= */
+
+  async function cargarAdministradores() {
+    const cont = document.getElementById("dash-administradores");
+    const { data, error } = await AdministradorService.listar();
+
+    if (error) {
+      cont.innerHTML = `<span class="dashboard-empty">No se pudo cargar (revisa RLS de "administrador").</span>`;
+      return;
+    }
+    if (!data || data.length === 0) {
+      cont.innerHTML = `<span class="dashboard-empty">Sin administradores registrados.</span>`;
+      return;
+    }
+    cont.innerHTML = data.map((a) => `
+      <div class="dashboard-person">
+        <div class="avatar-circle">🙂</div>
+        ${a.nom_admin}
+      </div>
+    `).join("");
+  }
+
+  async function cargarSucursales() {
+    const cont = document.getElementById("dash-sucursales");
+    const { data, error } = await SucursalRedesService.listarSucursales();
+
+    if (error) {
+      cont.innerHTML = `<span class="dashboard-empty">No se pudo cargar (revisa RLS de "sucursal").</span>`;
+      return;
+    }
+    if (!data || data.length === 0) {
+      cont.innerHTML = `<span class="dashboard-empty">Sin sucursales registradas.</span>`;
+      return;
+    }
+    cont.innerHTML = data.map((s) => `
+      <div class="dashboard-person">
+        <div class="avatar-circle">📍</div>
+        ${s.nom_sucursal}
+      </div>
+    `).join("");
+  }
+
+  async function cargarRedes() {
+    const cont = document.getElementById("dash-redes");
+    const { data, error } = await SucursalRedesService.listarRedes();
+
+    if (error) {
+      cont.innerHTML = `<span class="dashboard-empty">No se pudo cargar (revisa RLS de "red_social").</span>`;
+      return;
+    }
+    if (!data || data.length === 0) {
+      cont.innerHTML = `<span class="dashboard-empty">Sin redes sociales registradas.</span>`;
+      return;
+    }
+    cont.innerHTML = data.map((r) => `
+      <div class="dashboard-person">
+        <div class="avatar-circle">🔗</div>
+        ${r.nom_red}
+      </div>
+    `).join("");
+  }
+
+  async function cargarCategoriasConConteo() {
+    const cont = document.getElementById("dash-categorias");
+    const { data: categorias, error } = await CategoriaService.listar();
+
+    if (error) {
+      cont.innerHTML = `<span class="dashboard-empty">No se pudo cargar (revisa RLS de "categoria").</span>`;
+      return;
+    }
+    if (!categorias || categorias.length === 0) {
+      cont.innerHTML = `<span class="dashboard-empty">Sin categorías registradas.</span>`;
+      return;
+    }
+
+    cont.innerHTML = "";
+    for (const cat of categorias) {
+      const { data: productos } = await ProductosService.listarPorCategoria(cat.id_cate);
+      const total = productos ? productos.length : 0;
+
+      const fila = document.createElement("div");
+      fila.className = "category-count-row";
+
+      const opciones = total > 0
+        ? productos.map((p) => `<option value="${p.id_prod}">${p.nom_prod}</option>`).join("")
+        : `<option value="">Sin productos</option>`;
+
+      fila.innerHTML = `
+        <span>${cat.nom_cate}</span>
+        <span class="count">
+          <select class="category-product-select" data-categoria="${cat.id_cate}" ${total === 0 ? "disabled" : ""}>
+            <option value="">${total} producto${total === 1 ? "" : "s"}</option>
+            ${opciones}
+          </select>
+          →
+        </span>
+      `;
+
+      fila.querySelector("select").addEventListener("change", (e) => {
+        const idProd = e.target.value;
+        if (idProd) {
+          window.location.href = `Productos.html?categoria=${cat.id_cate}&producto=${idProd}`;
+        }
+      });
+
+      cont.appendChild(fila);
+    }
+  }
+</script>
+</body>
+</html>
