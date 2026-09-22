@@ -104,10 +104,17 @@
     }
 
     // Generales primero, específicos debajo
-    const caracteristicas = [
-      ...(producto.producto_elemento || []).map((pe) => pe.elemento.nom_elem),
-      ...(producto.dato_extra || []).map((d) => `${d.etiqueta}: ${d.valor}`),
-    ];
+    // Cada característica: "ELEMENTO: CUALIDAD" si tiene cualidad, si no solo "ELEMENTO"
+    const caracteristicas = (producto.caracteristica || []).map((c) =>
+      c.cualidad ? `${c.elemento}: ${c.cualidad}` : c.elemento
+    );
+
+    // Al final de la lista, una línea con los colores admitidos (desde el backend)
+    const nombresColores = (producto.producto_color || []).map((pc) => pc.color.nom_color);
+    if (nombresColores.length > 0) {
+      caracteristicas.push(`COLORES: ${nombresColores.join(", ")}`);
+    }
+
     document.getElementById("detail-features").innerHTML = caracteristicas.map((f) => `<li>${f}</li>`).join("")
       || `<li>Sin características registradas.</li>`;
 

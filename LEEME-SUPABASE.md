@@ -100,6 +100,65 @@ y no hace falta agregar nada nuevo). Lo único que sí hace falta:
 alter table producto add column activo boolean not null default true;
 ```
 
+## 4.1 Tabla "caracteristica" (reemplaza a elemento + dato_extra)
+
+Se descartó la idea de tener características "generales reutilizables"
+(la tabla `elemento`) — el cliente pidió poder escribir libremente el
+elemento y su cualidad para cada producto, aunque se repita el texto
+entre productos distintos. Por eso `elemento` y `dato_extra` se
+eliminaron, y se reemplazaron por una sola tabla, 1:N con `producto`:
+
+```sql
+drop table producto_elemento;
+drop table elemento;
+drop table dato_extra;
+
+create table caracteristica(
+  id_carac varchar(15) primary key not null,
+  elemento varchar(100) not null,
+  cualidad varchar(300),
+  id_prod varchar(15),
+  foreign key(id_prod) references producto(id_prod)
+);
+
+CREATE OR REPLACE FUNCTION insertar_caracteristica(
+    n_etiqueta varchar(100),
+    n_valor varchar(300),
+    n_prod varchar(15)
+)
+RETURNS VARCHAR(15)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    nuevo_id VARCHAR(15);
+    numero INTEGER;
+BEGIN
+    SELECT COALESCE(MAX(CAST(SUBSTRING(id_carac FROM 7) AS INTEGER)), 0) + 1
+    INTO numero
+    FROM caracteristica
+    WHERE id_carac LIKE 'CARAC_%';
+
+    nuevo_id := 'CARAC_' || LPAD(numero::TEXT, 3, '0');
+
+    INSERT INTO caracteristica (id_carac, elemento, cualidad, id_prod)
+    VALUES (nuevo_id, n_etiqueta, n_valor, n_prod);
+    RETURN nuevo_id;
+END;
+$$;
+```
+
+En el catálogo público, cada fila se muestra como `ELEMENTO: CUALIDAD`
+(o solo `ELEMENTO` si no tiene cualidad), y al final de la lista se
+agrega una línea `COLORES: ...` con los colores que el producto tenga
+asignados desde `producto_color`.
+
+No olvides la política de **escritura** para poder registrar/editar/
+eliminar desde el panel (igual que hiciste con `producto`, `img_producto`,
+etc.):
+```sql
+create policy "escritura publica" on caracteristica for all using (true) with check (true);
+```
+
 ## 5. RLS pendiente
 
 Para que las páginas públicas y el Dashboard carguen datos, cada tabla
@@ -109,9 +168,7 @@ que consultan necesita RLS activado + una política de lectura pública:
 create policy "lectura publica" on categoria for select using (true);
 create policy "lectura publica" on producto for select using (true);
 create policy "lectura publica" on img_producto for select using (true);
-create policy "lectura publica" on producto_elemento for select using (true);
-create policy "lectura publica" on elemento for select using (true);
-create policy "lectura publica" on dato_extra for select using (true);
+create policy "lectura publica" on caracteristica for select using (true);
 create policy "lectura publica" on sucursal for select using (true);
 create policy "lectura publica" on red_social for select using (true);
 ```

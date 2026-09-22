@@ -35,7 +35,7 @@ async function renderNavbar(seccionActiva) {
   contenedor.innerHTML = `
     <aside class="admin-sidebar">
       <div class="sidebar-logo">
-        <img src="../Assets/Img/logo.svg" alt="Logo HELLMET">
+        <img src="../Assets/Img/logo_hellmet.png" alt="Logo HELLMET">
         HELLMET
       </div>
       <nav class="admin-nav">

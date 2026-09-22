@@ -81,7 +81,13 @@
   border-top: 1px dashed var(--line);
 }
 
-.specific-add-row input { flex: 1; }
+.specific-add-row input { flex: 1; min-width: 0; }
+
+@media (max-width: 480px) {
+  .specific-add-row { flex-wrap: wrap; }
+  .specific-add-row input { flex: 1 1 100%; }
+  .specific-add-row button { flex: 1 1 100%; }
+}
 
 .image-slots {
   display: flex;

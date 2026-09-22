@@ -15,10 +15,10 @@
    ========================================================= */
 
 const HERO_IMAGES = [
-  { src: "Img/Hero/1.jpg", alt: "Horno HELLMET" },
-  { src: "Img/Hero/2.jpg", alt: "Parrilla HELLMET" },
-  { src: "Img/Hero/3.jpg", alt: "Broastera HELLMET" },
-  { src: "Img/Hero/4.jpg", alt: "Cocina HELLMET" },
+  { src: "Img/Hero/paisaje_parrilada.png", alt: "Horno HELLMET" },
+  { src: "Img/Hero/horno1.png", alt: "Parrilla HELLMET" },
+  { src: "Img/Hero/pizzero1.png", alt: "Broastera HELLMET" },
+  { src: "Img/Hero/pizzero2.png", alt: "Cocina HELLMET" },
 ];
 
 function renderHeroCarousel(rutaAssets) {

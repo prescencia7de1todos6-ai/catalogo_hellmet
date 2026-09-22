@@ -20,7 +20,7 @@ function renderHeader(rutaAssets, rutaInicio) {
     <header class="site-header">
       <a href="${rutaInicio}" class="site-header-logo">HELLMET</a>
       <div class="header-logo-badge">
-        <img src="${rutaAssets}/Img/logo.svg" alt="Logo HELLMET">
+        <img src="${rutaAssets}/Img/logo_hellmet.png" alt="Logo HELLMET">
       </div>
       <span class="site-header-title">CATÁLOGO</span>
     </header>

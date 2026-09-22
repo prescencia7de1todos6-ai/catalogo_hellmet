@@ -48,8 +48,8 @@ const ProductosService = {
         *,
         categoria(id_cate, nom_cate),
         img_producto(id_img, url_img, orden),
-        producto_elemento(elemento(id_elem, nom_elem, detalle)),
-        dato_extra(id_dat_ext, etiqueta, valor)
+        producto_color(color(id_color, nom_color)),
+        caracteristica(id_carac, elemento, cualidad)
       `)
       .eq("id_prod", idProd)
       .eq("activo", true)
@@ -64,9 +64,8 @@ const ProductosService = {
       .select(`
         *,
         img_producto(id_img, url_img, orden),
-        producto_elemento(elemento(id_elem, nom_elem)),
         producto_color(color(id_color, nom_color)),
-        dato_extra(id_dat_ext, etiqueta, valor)
+        caracteristica(id_carac, elemento, cualidad)
       `)
       .eq("id_prod", idProd)
       .single();
@@ -123,34 +122,24 @@ const ProductosService = {
     return await supabaseClient.from("producto_color").delete().eq("id_prod", idProd).eq("id_color", idColor);
   },
 
-  // ---------- Elementos (características generales, reutilizables) ----------
-  async listarElementos() {
-    if (!supabaseClient) return { data: [], error: null };
-    return await supabaseClient.from("elemento").select("*").order("nom_elem");
+  // ---------- Características (elemento + cualidad, una fila por producto) ----------
+  async crearCaracteristica(elemento, cualidad, idProd) {
+    return await supabaseClient.rpc("insertar_caracteristica", {
+      n_etiqueta: elemento,
+      n_valor: cualidad,
+      n_prod: idProd,
+    });
   },
 
-  async vincularElemento(idProd, idElem) {
-    return await supabaseClient.from("producto_elemento").insert({ id_prod: idProd, id_elem: idElem });
-  },
-
-  async desvincularElemento(idProd, idElem) {
-    return await supabaseClient.from("producto_elemento").delete().eq("id_prod", idProd).eq("id_elem", idElem);
-  },
-
-  // ---------- Datos extra (específicos de un solo producto) ----------
-  async crearDatoExtra(etiqueta, valor, idProd) {
-    return await supabaseClient.rpc("insertar_detalle", { n_etiqueta: etiqueta, n_valor: valor, n_prod: idProd });
-  },
-
-  async actualizarDatoExtra(idDatExt, etiqueta, valor) {
+  async actualizarCaracteristica(idCarac, elemento, cualidad) {
     return await supabaseClient
-      .from("dato_extra")
-      .update({ etiqueta, valor })
-      .eq("id_dat_ext", idDatExt);
+      .from("caracteristica")
+      .update({ elemento, cualidad })
+      .eq("id_carac", idCarac);
   },
 
-  async eliminarDatoExtra(idDatExt) {
-    return await supabaseClient.from("dato_extra").delete().eq("id_dat_ext", idDatExt);
+  async eliminarCaracteristica(idCarac) {
+    return await supabaseClient.from("caracteristica").delete().eq("id_carac", idCarac);
   },
 
   // ---------- Imágenes (máximo 10 por producto) ----------

@@ -32,7 +32,7 @@ async function inicializarPaginaCategoria(nombreCategoria, descripcion) {
 }
 
 function capitalizar(texto) {
-  return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+  return texto.charAt(0).toUpperCase() + texto.slice(1).toUpperCase();
 }
 
 function renderGrilla(productos) {

@@ -3,6 +3,36 @@
    Requiere variables.css cargado antes.
    ========================================================= */
 
+body {
+  position: relative;
+  isolation: isolate; /* evita que el z-index -1 se salga del body */
+}
+ 
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  top: 50%;
+  width: min(70vw, 820px);
+  aspect-ratio: 1;
+  transform: translateY(-52%) rotate(-8deg);
+  border-radius: 42% 58% 65% 35% / 55% 40% 60% 45%;
+  background: radial-gradient(circle at 32% 30%, #ffffff 0%, var(--bg-panel) 45%, transparent 75%);
+  z-index: -1;
+  pointer-events: none;
+}
+ 
+body::before {
+  left: -18vw;
+}
+ 
+body::after {
+  right: -18vw;
+  transform: translateY(-46%) rotate(178deg);
+  background: radial-gradient(circle at 32% 30%, #ffffff 0%, var(--bg-panel) 45%, transparent 75%);
+}
+
+
 .site-header {
   position: relative;
   background: var(--header-gradient);
@@ -14,8 +44,8 @@
 }
 
 .site-header-logo {
-  font-family: var(--font-display);
-  font-size: 1.4rem;
+  font-family: var(--font-hellmet);
+  font-size: 3rem;
   letter-spacing: 0.05em;
   color: var(--text);
   text-decoration: none;
@@ -33,11 +63,11 @@
   left: 50%;
   top: 100%;
   transform: translate(-50%, -50%);
-  width: var(--logo-badge-size, 120px);
-  height: var(--logo-badge-size, 120px);
+  width: var(--logo-badge-size, 150px);
+  height: var(--logo-badge-size, 150px);
   border-radius: 50%;
-  background: var(--bg);
-  border: 4px solid var(--bg);
+  /*background: var(--bg);*/
+  /*border: 4px solid var(--bg);*/
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   overflow: hidden;
   display: flex;
@@ -66,9 +96,9 @@
 }
 
 .footer-col h4 {
-  font-family: var(--font-display);
+  font-family: var(--font-h4);
   margin: 0 0 8px;
-  font-size: 0.95rem;
+  font-size: 2rem;
   letter-spacing: 0.04em;
 }
 
@@ -84,7 +114,8 @@
 }
 
 .footer-redes-list a {
-  color: var(--accent);
+  color: var(--bg);
+  text-shadow: 0 0 10px black;
   text-decoration: none;
 }
 
@@ -109,8 +140,8 @@
 }
 
 .category-hero h1 {
-  font-family: var(--font-display);
-  font-size: 2rem;
+  font-family: var(--font-nom-prod);
+  font-size: 3rem;
   margin: 4px 0 8px;
 }
 
@@ -200,7 +231,7 @@
 }
 
 .product-card:hover .product-card-image {
-  box-shadow: 0 0 0 3px var(--accent-glow);
+  box-shadow: 0 0 5px 15px var(--accent-glow);
 }
 
 .product-card-name {

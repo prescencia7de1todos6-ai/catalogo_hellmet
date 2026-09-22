@@ -49,8 +49,21 @@
   background: var(--bg-panel);
   border: 1px solid var(--line);
   transition: box-shadow 0.2s ease;
+  display: flex;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+
 }
 
 .home-category-circle:hover .circle {
   box-shadow: 0 0 0 4px var(--accent-2-glow);
+}
+
+.imagen_categoria{
+  object-fit: contain;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
 }
