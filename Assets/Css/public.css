@@ -81,6 +81,10 @@ body::after {
   object-fit: contain;
 }
 
+@media(max-width:640px){
+  .site-header-logo{font-size: 1.5rem;}
+}
+
 .site-footer {
   background: var(--header-gradient);
   border-top: 1px solid var(--header-line);
