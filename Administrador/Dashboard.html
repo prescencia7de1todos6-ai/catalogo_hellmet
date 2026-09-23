@@ -91,7 +91,7 @@
     }
     cont.innerHTML = data.map((a) => `
       <div class="dashboard-person">
-        <div class="avatar-circle">🙂</div>
+        <div class="avatar-circle"><img src="../Assets/Img/logoAdmin.png" alt="admin" width="50px" height="50px"  style="border-radius: 50%;"></div>
         ${a.nom_admin}
       </div>
     `).join("");
@@ -111,7 +111,7 @@
     }
     cont.innerHTML = data.map((s) => `
       <div class="dashboard-person">
-        <div class="avatar-circle">📍</div>
+        <div class="avatar-circle"><img src="../Assets/Img/logoUbi.png" alt="admin" width="50px" height="50px"  style="border-radius: 50%;"></div>
         ${s.nom_sucursal}
       </div>
     `).join("");

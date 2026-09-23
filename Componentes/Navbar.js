@@ -44,7 +44,7 @@ async function renderNavbar(seccionActiva) {
         `).join("")}
       </nav>
       <div class="admin-user-block">
-        <div class="admin-user-avatar">🙂</div>
+        <div class="admin-user-avatar"><img src="../Assets/Img/logoAdmin.png" alt="admin" width="80px" height="80px"  style="border-radius: 50%;"></div>
         <span id="navbar-user-name">Usuario</span>
         <button id="navbar-logout-btn">Cerrar sesión</button>
       </div>

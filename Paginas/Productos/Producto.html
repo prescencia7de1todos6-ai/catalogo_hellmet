@@ -145,12 +145,15 @@
       return;
     }
     track.innerHTML = imagenesProducto.map((url) => `
-      <div class="carousel-slide"><img src="${url}" alt=""></div>
+      <div class="carousel-slide"><img src="${url}" alt="" draggable="false"></div>
     `).join("");
     dots.innerHTML = imagenesProducto.map((_, i) => `<span class="dot ${i === 0 ? "active" : ""}"></span>`).join("");
 
     let startX = 0;
-    track.addEventListener("pointerdown", (e) => { startX = e.clientX; });
+    track.addEventListener("pointerdown", (e) => {
+      startX = e.clientX;
+      track.setPointerCapture(e.pointerId); // así el arrastre sigue funcionando aunque el mouse salga del carrusel
+    });
     track.addEventListener("pointerup", (e) => {
       const delta = e.clientX - startX;
       if (delta > 40) moverCarrusel(-1);

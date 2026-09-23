@@ -114,7 +114,13 @@
 <script src="../Componentes/Navbar.js"></script>
 <script>
   const LIMITE_IMAGENES = 10;
-  const estado = { imagenes: [], coloresVinculados: new Set(), caracteristica: [] };
+  const estado = {
+    imagenes: [],
+    coloresVinculados: new Set(),
+    caracteristica: [],
+    caracteristicaEliminadas: [],
+    caracteristicaCargada: false,
+  };
 
   document.addEventListener("DOMContentLoaded", async () => {
     await AdministradorService.protegerPagina();
@@ -228,63 +234,35 @@
     });
   }
 
-  /* ---------------- CARACTERÍSTICAS ESPECÍFICAS (varios, editables) ---------------- */
+  /* ---------------- CARACTERÍSTICAS (elemento + cualidad, editables en memoria) ----------------
+     Nada de esto toca Supabase hasta que se presiona Registrar/Actualizar —
+     así, si empiezas a editar un producto y cambias de opinión a mitad de
+     camino, no queda nada guardado a medias en el producto equivocado. */
 
   async function cargarDatosEspecificos(idProdActual) {
     const lista = document.getElementById("lista-datos-especificos");
     const filaAgregar = lista.querySelector(".specific-add-row");
     lista.querySelectorAll(".feature-row").forEach((n) => n.remove());
 
-    if (idProdActual) {
-      // Producto ya existe: se traen sus datos extra reales, cada uno editable
+    if (idProdActual && estado.caracteristica.length === 0 && !estado.caracteristicaCargada) {
+      // Primera vez que se abre este producto: se traen sus características reales
       const { data: prod } = await ProductosService.obtenerPorId(idProdActual);
-      (prod?.caracteristica || []).forEach((d) => {
-        lista.insertBefore(crearFilaEspecificoGuardado(d), filaAgregar);
-      });
-    } else {
-      // Producto todavía no existe: se muestran los que se han ido agregando en memoria
-      estado.caracteristica.forEach((d, indice) => {
-        lista.insertBefore(crearFilaEspecificoPendiente(d, indice), filaAgregar);
-      });
+      estado.caracteristica = (prod?.caracteristica || []).map((d) => ({
+        id_carac: d.id_carac,
+        etiqueta: d.elemento,
+        valor: d.cualidad || "",
+      }));
+      estado.caracteristicaCargada = true;
     }
-  }
 
-  /** Fila editable para un dato extra que YA está guardado en Supabase. */
-  function crearFilaEspecificoGuardado(d) {
-    const row = document.createElement("div");
-    row.className = "feature-row feature-row-editable";
-    row.innerHTML = `
-      <input type="text" class="especifico-input-etiqueta" value="${d.elemento}">
-      <input type="text" class="especifico-input-valor" value="${d.cualidad}">
-      <button type="button" class="remove-btn" title="Eliminar">✕</button>
-    `;
-
-    const inputEtiqueta = row.querySelector(".especifico-input-etiqueta");
-    const inputValor = row.querySelector(".especifico-input-valor");
-
-    // Se guarda solo al salir del campo (blur), para no mandar una consulta por cada letra
-    const guardarCambios = async () => {
-      const nuevaEtiqueta = inputEtiqueta.value.trim();
-      const nuevoValor = inputValor.value.trim();
-      if (!nuevaEtiqueta) { mostrarMensaje(MENSAJES.CAMPOS_INCOMPLETOS, "error"); return; }
-      if (nuevaEtiqueta === d.etiqueta && nuevoValor === d.valor) return; // sin cambios, no gasta consulta
-      await ProductosService.actualizarCaracteristica(d.id_carac, nuevaEtiqueta, nuevoValor);
-      d.etiqueta = nuevaEtiqueta;
-      d.valor = nuevoValor;
-    };
-    inputEtiqueta.addEventListener("blur", guardarCambios);
-    inputValor.addEventListener("blur", guardarCambios);
-
-    row.querySelector(".remove-btn").addEventListener("click", async () => {
-      await ProductosService.eliminarCaracteristica(d.id_carac);
-      row.remove();
+    estado.caracteristica.forEach((d, indice) => {
+      lista.insertBefore(crearFilaCaracteristica(d, indice), filaAgregar);
     });
-
-    return row;
   }
 
-  /** Fila editable para un dato extra que aún NO se ha guardado (producto sin registrar todavía). */
-  function crearFilaEspecificoPendiente(d, indice) {
+  /** Una fila editable en memoria — ya sea que venga de la base de datos
+   *  (tiene id_carac) o sea nueva (id_carac es null). Nunca guarda sola. */
+  function crearFilaCaracteristica(d, indice) {
     const row = document.createElement("div");
     row.className = "feature-row feature-row-editable";
     row.innerHTML = `
@@ -300,36 +278,44 @@
       estado.caracteristica[indice].valor = e.target.value.trim();
     });
     row.querySelector(".remove-btn").addEventListener("click", () => {
-      estado.caracteristica.splice(indice, 1);
-      cargarDatosEspecificos(null); // se vuelve a numerar la lista en memoria
+      const [eliminada] = estado.caracteristica.splice(indice, 1);
+      // Si ya existía en la base de datos, se recuerda para borrarla recién al Guardar/Actualizar
+      if (eliminada.id_carac) estado.caracteristicaEliminadas.push(eliminada.id_carac);
+      cargarDatosEspecificos(null); // solo re-pinta la lista en memoria, no vuelve a consultar Supabase
     });
 
     return row;
   }
 
-  /** Botón "+": agrega tantos datos extra como el usuario quiera, uno tras otro. */
-  async function agregarEspecifico() {
+  /** Botón "+": agrega una fila en memoria. No toca Supabase todavía. */
+  function agregarEspecifico() {
     const inputEtiqueta = document.getElementById("especifico-etiqueta");
     const inputValor = document.getElementById("especifico-valor");
     const etiqueta = inputEtiqueta.value.trim();
     const valor = inputValor.value.trim();
     if (!etiqueta) { mostrarMensaje(MENSAJES.CAMPOS_INCOMPLETOS, "error"); return; }
 
-    const idProd = document.getElementById("prod-id").value;
-
-    if (idProd) {
-      // Producto ya existe: se guarda directo en Supabase
-      await ProductosService.crearCaracteristica(etiqueta, valor, idProd);
-      await cargarDatosEspecificos(idProd);
-    } else {
-      // Producto nuevo: se guarda en memoria, se sube todo junto al Registrar
-      estado.caracteristica.push({ etiqueta, valor });
-      await cargarDatosEspecificos(null);
-    }
+    estado.caracteristica.push({ id_carac: null, etiqueta, valor });
+    cargarDatosEspecificos(null);
 
     inputEtiqueta.value = "";
     inputValor.value = "";
     inputEtiqueta.focus(); // listo para seguir agregando el siguiente sin hacer clic de nuevo
+  }
+
+  /** Guarda en Supabase todo lo que quedó pendiente en memoria: filas nuevas,
+   *  filas editadas y filas marcadas para eliminar. Se llama al Registrar/Actualizar. */
+  async function guardarCaracteristicasPendientes(idProd) {
+    for (const idCarac of estado.caracteristicaEliminadas) {
+      await ProductosService.eliminarCaracteristica(idCarac);
+    }
+    for (const d of estado.caracteristica) {
+      if (d.id_carac) {
+        await ProductosService.actualizarCaracteristica(d.id_carac, d.etiqueta, d.valor);
+      } else {
+        await ProductosService.crearCaracteristica(d.etiqueta, d.valor, idProd);
+      }
+    }
   }
 
   /* ---------------- IMÁGENES ---------------- */
@@ -397,6 +383,8 @@
     
     await cargarColores(idProd);
     estado.caracteristica = [];
+    estado.caracteristicaEliminadas = [];
+    estado.caracteristicaCargada = false; // fuerza a traer los datos reales de ESTE producto
     await cargarDatosEspecificos(idProd);
     renderSlotsImagenes();
 
@@ -411,6 +399,8 @@
     
     estado.coloresVinculados = new Set();
     estado.caracteristica = [];
+    estado.caracteristicaEliminadas = [];
+    estado.caracteristicaCargada = false;
     document.getElementById("btn-actualizar").disabled = true;
     cargarColores(null);
     cargarDatosEspecificos(null);
@@ -445,6 +435,8 @@
     if (esActualizacion && idExistente) {
       const { error } = await ProductosService.actualizar(idExistente, datos);
       if (error) { mostrarMensaje("No se pudo actualizar el producto.", "error"); return; }
+
+      await guardarCaracteristicasPendientes(idExistente);
       mostrarMensaje(MENSAJES.GUARDADO_EXITO, "exito");
     } else {
       const { data: nuevoId, error } = await ProductosService.crear(datos);
@@ -453,9 +445,7 @@
       for (const idColor of estado.coloresVinculados) {
         await ProductosService.vincularColor(nuevoId, idColor);
       }
-      for (const d of estado.caracteristica) {
-        await ProductosService.crearCaracteristica(d.etiqueta, d.valor, nuevoId);
-      }
+      await guardarCaracteristicasPendientes(nuevoId);
       let orden = 1;
       for (const img of estado.imagenes) {
         if (img.file) await ProductosService.subirImagen(img.file, nuevoId, orden);

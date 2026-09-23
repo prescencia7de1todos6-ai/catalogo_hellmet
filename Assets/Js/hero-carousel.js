@@ -42,10 +42,63 @@ function renderHeroCarousel(rutaAssets) {
   // inicio, así que el salto de vuelta al 0% es invisible para el ojo.
   contenedor.innerHTML = `
     <div class="hero-carousel">
-      <div class="hero-track">
+      <div class="hero-track" id="hero-track">
         ${slidesHtml}
         ${slidesHtml}
       </div>
     </div>
   `;
+
+  activarArrastreHero();
+}
+
+/* =========================================================
+   Arrastre manual: mientras el mouse/dedo está presionado,
+   se pausa la animación automática y el carrusel sigue al
+   puntero. Al soltar, se retoma la animación de siempre
+   (vuelve a moverse sola, lenta y continua).
+   ========================================================= */
+function activarArrastreHero() {
+  const track = document.getElementById("hero-track");
+  if (!track) return;
+
+  track.querySelectorAll("img").forEach((img) => { img.draggable = false; });
+
+  let arrastrando = false;
+  let posInicial = 0;
+  let offsetInicial = 0;
+
+  const obtenerOffsetActual = () => {
+    const matriz = getComputedStyle(track).transform;
+    if (matriz === "none") return 0;
+    // matrix(a, b, c, d, tx, ty) -> nos interesa "tx"
+    const valores = matriz.match(/matrix\(([^)]+)\)/);
+    return valores ? parseFloat(valores[1].split(",")[4]) : 0;
+  };
+
+  track.addEventListener("pointerdown", (e) => {
+    arrastrando = true;
+    posInicial = e.clientX;
+    offsetInicial = obtenerOffsetActual();
+    track.classList.add("hero-track-dragging"); // esto pausa la animación (ver CSS)
+    track.style.transform = `translateX(${offsetInicial}px)`;
+    track.setPointerCapture(e.pointerId);
+  });
+
+  track.addEventListener("pointermove", (e) => {
+    if (!arrastrando) return;
+    const delta = e.clientX - posInicial;
+    track.style.transform = `translateX(${offsetInicial + delta}px)`;
+  });
+
+  const soltar = () => {
+    if (!arrastrando) return;
+    arrastrando = false;
+    track.style.transform = ""; // quita el control manual
+    track.classList.remove("hero-track-dragging"); // la animación de siempre retoma sola
+  };
+
+  track.addEventListener("pointerup", soltar);
+  track.addEventListener("pointercancel", soltar);
+  track.addEventListener("pointerleave", soltar);
 }
