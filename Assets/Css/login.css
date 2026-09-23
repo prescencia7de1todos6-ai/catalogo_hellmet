@@ -24,8 +24,6 @@
   /*animation: sombraPulso 3s linear infinite;*/
 }
 
-
-
 .login-form-side {
   padding: 48px 40px;
   display: flex;
@@ -33,6 +31,14 @@
   justify-content: center;
   gap: 18px;
   background-color: #919197;
+}
+
+@media (max-width: 600px) {
+    .login-form-side {
+        align-items: center;
+        text-align: center;
+        padding: 35px 20px;
+    }
 }
 
 .login-form-side h1 {

@@ -80,6 +80,14 @@
   color: var(--text);
 }
 
+@media (max-width: 640px) {
+    .category-count-row {
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+}
+
 .category-count-row:last-child { border-bottom: none; }
 
 .category-count-row .count {
