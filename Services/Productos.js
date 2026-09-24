@@ -144,7 +144,12 @@ const ProductosService = {
 
   // ---------- Imágenes (máximo 10 por producto) ----------
   async subirImagen(archivo, idProd, orden) {
-    const nombreArchivo = `${idProd}/${Date.now()}_${archivo.name}`;
+    // Nombre corto y seguro: timestamp + extensión, en vez del nombre
+    // original completo (que en fotos de celular puede ser larguísimo
+    // y generar una URL demasiado larga para guardar en la base de datos).
+    const extension = archivo.name.includes(".") ? archivo.name.split(".").pop() : "jpg";
+    const nombreArchivo = `${idProd}/${Date.now()}.${extension}`;
+
     const { error: errorSubida } = await supabaseClient.storage
       .from(SUPABASE_BUCKET_PRODUCTOS)
       .upload(nombreArchivo, archivo);

@@ -159,6 +159,33 @@ etc.):
 create policy "escritura publica" on caracteristica for all using (true) with check (true);
 ```
 
+## 4.2 Columna "url_img" demasiado corta (bug real, ya corregido)
+
+`img_producto.url_img` estaba como `varchar(200)`, y las URLs reales de
+Supabase Storage + nombres de archivo largos (fotos de celular,
+capturas de pantalla) a veces superaban ese límite. Cuando pasaba,
+Supabase rechazaba la fila — pero la imagen ya se había subido a
+Storage un paso antes, dejando archivos huérfanos ahí sin registrar en
+la base de datos. Corre esto una sola vez:
+
+```sql
+alter table img_producto alter column url_img type text;
+```
+
+También se ajustó `Services/Productos.js` para generar nombres de
+archivo cortos (timestamp + extensión) en vez de usar el nombre
+original completo, reduciendo el riesgo de que esto vuelva a pasar.
+
+Ya no hay límite de cantidad de imágenes por producto en el panel — se
+había puesto un tope de 10 al principio, pero se quitó porque no hacía
+falta.
+
+**Nota**: los archivos que quedaron huérfanos en Storage antes de este
+arreglo no se recuperan solos — si algún producto quedó sin imágenes
+(como pasó), hay que volver a subirlas desde el panel. Los archivos
+viejos sin usar en Storage se pueden borrar manualmente cuando quieras,
+no afectan nada mientras estén ahí.
+
 ## 5. RLS pendiente
 
 Para que las páginas públicas y el Dashboard carguen datos, cada tabla

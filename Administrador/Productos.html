@@ -90,7 +90,7 @@
           </div>
         </div>
 
-        <h3>Imágenes para el carrusel <span style="font-weight:400; font-size:0.8rem; color:var(--text-dim);">(máximo 10)</span></h3>
+        <h3>Imágenes para el carrusel</h3>
         <div class="image-slots" id="image-slots"></div>
         <p class="image-slots-hint" id="image-slots-count">0 / 10 imágenes</p>
 
@@ -113,7 +113,6 @@
 <script src="../Services/Sucursal_redes.js"></script>
 <script src="../Componentes/Navbar.js"></script>
 <script>
-  const LIMITE_IMAGENES = 10;
   const estado = {
     imagenes: [],
     coloresVinculados: new Set(),
@@ -337,28 +336,28 @@
       cont.appendChild(slot);
     });
 
-    if (estado.imagenes.length < LIMITE_IMAGENES) {
-      const slot = document.createElement("div");
-      slot.className = "image-slot";
-      slot.innerHTML = `<button type="button" class="slot-add">+</button><input type="file" accept="image/*" style="display:none">`;
-      const input = slot.querySelector("input");
-      slot.querySelector(".slot-add").addEventListener("click", () => input.click());
-      input.addEventListener("change", async () => {
-        if (!input.files[0]) return;
-        const idProd = document.getElementById("prod-id").value;
-        if (idProd) {
-          const orden = estado.imagenes.length + 1;
-          const { data } = await ProductosService.subirImagen(input.files[0], idProd, orden);
-          estado.imagenes.push({ url: URL.createObjectURL(input.files[0]), id_img: data });
-        } else {
-          estado.imagenes.push({ file: input.files[0] });
-        }
-        renderSlotsImagenes();
-      });
-      cont.appendChild(slot);
-    }
+    // Sin límite de cantidad: el botón "+" para agregar más siempre está disponible
+    const slot = document.createElement("div");
+    slot.className = "image-slot";
+    slot.innerHTML = `<button type="button" class="slot-add">+</button><input type="file" accept="image/*" style="display:none">`;
+    const input = slot.querySelector("input");
+    slot.querySelector(".slot-add").addEventListener("click", () => input.click());
+    input.addEventListener("change", async () => {
+      if (!input.files[0]) return;
+      const idProd = document.getElementById("prod-id").value;
+      if (idProd) {
+        const orden = estado.imagenes.length + 1;
+const { data, error } = await ProductosService.subirImagen(input.files[0], idProd, orden);
+if (error) console.error("Fallo insertar_imagen:", error);
+        estado.imagenes.push({ url: URL.createObjectURL(input.files[0]), id_img: data });
+      } else {
+        estado.imagenes.push({ file: input.files[0] });
+      }
+      renderSlotsImagenes();
+    });
+    cont.appendChild(slot);
 
-    document.getElementById("image-slots-count").textContent = `${estado.imagenes.length} / ${LIMITE_IMAGENES} imágenes`;
+    document.getElementById("image-slots-count").textContent = `${estado.imagenes.length} imagen${estado.imagenes.length === 1 ? "" : "es"}`;
   }
 
   /* ---------------- FORMULARIO: EDITAR / LIMPIAR / GUARDAR ---------------- */
