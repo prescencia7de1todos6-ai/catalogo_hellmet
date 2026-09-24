@@ -69,9 +69,9 @@ const SucursalRedesService = {
   },
 
   async crearRed(nomRed, urlRed, idAdmin) {
-    return await supabaseClient
-      .from("red_social")
-      .insert({ nom_red: nomRed, url_red: urlRed, id_admin_reg: idAdmin });
+    return await supabaseClient.rpc("insertar_redes",{
+      nom_red: nomRed, url_red: urlRed, id_admin_reg: idAdmin
+    });
   },
 
   async actualizarRed(idRed, nomRed, urlRed, idAdmin) {
