@@ -125,6 +125,23 @@ body::after {
 
 .footer-redes-list a:hover { text-decoration: underline; }
 
+.footer-fila-logo{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+@media(max-width: 640px){
+  .footer-fila-logo{ justify-content: center;}
+}
+.footer-logo-circular{
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--bg-panel);
+}
 /* ---------- Banner de categoría ---------- */
 
 .category-hero {

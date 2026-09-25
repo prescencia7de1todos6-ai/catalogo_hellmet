@@ -24,7 +24,7 @@ async function renderFooter() {
     <footer class="site-footer">
       <div class="footer-col">
         <h4>Compañía</h4>
-        <p>Bienvenido a HELLMET, equipos de cocción hechos para durar. Gracias por confiar en nosotros.</p>
+        <p>Bienvenido a HELLMET, especialistas en hornos, cocinas, parrillas y broasteras; todas semi-industriales. Para usos domésticos o de negocio/emprendimientos.</p>
       </div>
       <div class="footer-col">
         <h4>Ubicación</h4>
@@ -57,9 +57,9 @@ async function cargarUbicacionesFooter() {
 
   cont.innerHTML = data.map((s) => {
     const texto = s.ubicacion || s.nom_sucursal;
-    return s.url_ubi
-      ? `<li><a href="${s.url_ubi}" target="_blank" rel="noopener">${texto}</a></li>`
-      : `<li>${texto}</li>`;
+    const logo=s.logo_ubi?`<img src="${s.logo_ubi}" alt="" class="footer-logo-circular">`:"";
+    const enlace= s.url_ubi ? `<a href="${s.url_ubi}" target="_blank" rel="noopener">${texto}</a>`: `<span>${texto}</span>`;
+    return `<li class="footer-fila-logo">${logo}${enlace}</li>`;
   }).join("");
 }
 
@@ -72,5 +72,10 @@ async function cargarRedesFooter() {
     cont.innerHTML = `<li>Aún sin redes sociales cargadas.</li>`;
     return;
   }
-  cont.innerHTML = data.map((r) => `<li><a href="${r.url_red}" target="_blank" rel="noopener">${r.nom_red}</a></li>`).join("");
+  cont.innerHTML = data.map((r) =>
+  {
+    const logo = r.logo_red_social ? `<img src="${r.logo_red_social}" alt="" class="footer-logo-circular">`:"";
+    return `<li class="footer-fila-logo">${logo}<a href="${r.url_red}" target="_blank" rel="noopener">${r.nom_red}</a></li>`
+  }
+  ).join("");
 }

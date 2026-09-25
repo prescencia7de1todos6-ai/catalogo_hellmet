@@ -64,9 +64,14 @@ function activarArrastreHero() {
 
   track.querySelectorAll("img").forEach((img) => { img.draggable = false; });
 
+  // Tiempo sin interacción (ms) antes de que el carrusel vuelva a
+  // moverse solo, luego de tocarlo/arrastrarlo.
+  const ESPERA_REANUDAR = 2000;
+
   let arrastrando = false;
   let posInicial = 0;
   let offsetInicial = 0;
+  let temporizadorReanudar = null;
 
   const obtenerOffsetActual = () => {
     const matriz = getComputedStyle(track).transform;
@@ -76,7 +81,38 @@ function activarArrastreHero() {
     return valores ? parseFloat(valores[1].split(",")[4]) : 0;
   };
 
+  const cancelarReanudacion = () => {
+    if (temporizadorReanudar) {
+      clearTimeout(temporizadorReanudar);
+      temporizadorReanudar = null;
+    }
+  };
+
+  // Retoma la animación automática desde la MISMA posición donde el
+  // carrusel quedó al soltarlo (sin salto visual): calcula qué tan
+  // avanzado está dentro de un ciclo y usa un animation-delay
+  // negativo equivalente, en vez de reiniciar desde el principio.
+  const reanudarAutomatico = () => {
+    temporizadorReanudar = null;
+    const offsetActual = obtenerOffsetActual(); // px, normalmente negativo
+    const mitadAncho = track.scrollWidth / 2; // ancho de un ciclo completo
+    if (mitadAncho > 0) {
+      const avance = ((-offsetActual % mitadAncho) + mitadAncho) % mitadAncho;
+      const fraccion = avance / mitadAncho;
+      const duracion = parseFloat(getComputedStyle(track).animationDuration) || 60;
+      track.style.animationDelay = `${-(fraccion * duracion)}s`;
+    }
+    track.style.transform = ""; // suelta el control manual
+    track.classList.remove("hero-track-dragging"); // la animación retoma sola
+  };
+
+  const programarReanudacion = () => {
+    cancelarReanudacion();
+    temporizadorReanudar = setTimeout(reanudarAutomatico, ESPERA_REANUDAR);
+  };
+
   track.addEventListener("pointerdown", (e) => {
+    cancelarReanudacion(); // si estaba por reanudar, se cancela: seguimos tocando
     arrastrando = true;
     posInicial = e.clientX;
     offsetInicial = obtenerOffsetActual();
@@ -94,8 +130,9 @@ function activarArrastreHero() {
   const soltar = () => {
     if (!arrastrando) return;
     arrastrando = false;
-    track.style.transform = ""; // quita el control manual
-    track.classList.remove("hero-track-dragging"); // la animación de siempre retoma sola
+    // Se queda quieto donde lo soltaste; recién tras ESPERA_REANUDAR
+    // sin ninguna interacción nueva, vuelve a moverse solo.
+    programarReanudacion();
   };
 
   track.addEventListener("pointerup", soltar);

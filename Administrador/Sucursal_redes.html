@@ -21,7 +21,7 @@
 
     <div class="admin-table-wrap">
       <table class="admin-table">
-        <thead><tr><th>Nombre</th><th>Celular</th><th>Dirección</th><th>Url Ubicación</th><th>Acciones</th></tr></thead>
+        <thead><tr><th>Logo</th><th>Nombre</th><th>Celular</th><th>Dirección</th><th>Url Ubicación</th><th>Acciones</th></tr></thead>
         <tbody id="tabla-sucursales"></tbody>
       </table>
     </div>
@@ -30,6 +30,7 @@
       <h3>Datos de sucursal</h3>
       <form id="form-sucursal">
         <input type="hidden" id="suc-id">
+        <input type="hidden" id="suc-logo-actual">
         <div class="admin-form-grid">
           <div class="admin-field">
             <label for="suc-nombre">Nombre</label>
@@ -47,6 +48,14 @@
             <label for="suc-url-ubi">Url Maps</label>
             <input type="text" id="suc-url-ubi" placeholder="https://maps.google.com/...">
           </div>
+          <div class="admin-field">
+            <label for="suc-logo">Logo de la sucursal</label>
+            <input type="file" id="suc-logo" accept="image/*">
+          </div>
+          <div class="admin-field">
+            <label>Vista previa</label>
+            <img id="suc-logo-preview" alt="" style="display:none; width:56px; height:56px; border-radius:50%; object-fit:cover; border:1px solid var(--line);">
+          </div>
         </div>
         <div class="admin-form-actions">
           <button type="submit" class="admin-btn primary" id="btn-registrar-suc">Registrar</button>
@@ -60,7 +69,7 @@
 
     <div class="admin-table-wrap">
       <table class="admin-table">
-        <thead><tr><th>Red social</th><th>Url</th><th>Acciones</th></tr></thead>
+        <thead><tr><th>Logo</th><th>Red social</th><th>Url</th><th>Acciones</th></tr></thead>
         <tbody id="tabla-redes"></tbody>
       </table>
     </div>
@@ -69,6 +78,7 @@
       <h3>Datos de red social</h3>
       <form id="form-red">
         <input type="hidden" id="red-id">
+        <input type="hidden" id="red-logo-actual">
         <div class="admin-form-grid">
           <div class="admin-field">
             <label for="red-nombre">Red social</label>
@@ -77,6 +87,14 @@
           <div class="admin-field full">
             <label for="red-url">Url</label>
             <input type="text" id="red-url" required>
+          </div>
+          <div class="admin-field">
+            <label for="red-logo">Logo de la red</label>
+            <input type="file" id="red-logo" accept="image/*">
+          </div>
+          <div class="admin-field">
+            <label>Vista previa</label>
+            <img id="red-logo-preview" alt="" style="display:none; width:56px; height:56px; border-radius:50%; object-fit:cover; border:1px solid var(--line);">
           </div>
         </div>
         <div class="admin-form-actions">
@@ -134,10 +152,12 @@
     document.getElementById("btn-limpiar-suc").addEventListener("click", limpiarFormularioSucursal);
     document.getElementById("form-sucursal").addEventListener("submit", (e) => { e.preventDefault(); guardarSucursal(false); });
     document.getElementById("btn-actualizar-suc").addEventListener("click", () => guardarSucursal(true));
+    document.getElementById("suc-logo").addEventListener("change", previsualizarLogoSucursal);
 
     document.getElementById("btn-limpiar-red").addEventListener("click", limpiarFormularioRed);
     document.getElementById("form-red").addEventListener("submit", (e) => { e.preventDefault(); guardarRed(false); });
     document.getElementById("btn-actualizar-red").addEventListener("click", () => guardarRed(true));
+    document.getElementById("red-logo").addEventListener("change", previsualizarLogoRed);
 
     document.getElementById("btn-limpiar-color").addEventListener("click", limpiarFormularioColor);
     document.getElementById("form-color").addEventListener("submit", (e) => { e.preventDefault(); guardarColor(false); });
@@ -161,6 +181,7 @@
     data.forEach((s) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
+        <td>${s.logo_ubi ? `<img src="${s.logo_ubi}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">` : "—"}</td>
         <td>${s.nom_sucursal}</td>
         <td>${s.celular}</td>
         <td>${s.ubicacion || "—"}</td>
@@ -176,6 +197,11 @@
         document.getElementById("suc-celular").value = s.celular;
         document.getElementById("suc-ubicacion").value = s.ubicacion || "";
         document.getElementById("suc-url-ubi").value = s.url_ubi || "";
+        document.getElementById("suc-logo-actual").value = s.logo_ubi || "";
+        document.getElementById("suc-logo").value = "";
+        const preview = document.getElementById("suc-logo-preview");
+        if (s.logo_ubi) { preview.src = s.logo_ubi; preview.style.display = ""; }
+        else { preview.style.display = "none"; }
         document.getElementById("btn-actualizar-suc").disabled = false;
         document.getElementById("form-sucursal").scrollIntoView({ behavior: "smooth" });
       });
@@ -200,7 +226,17 @@
     document.getElementById("form-sucursal").reset();
     document.getElementById("suc-id").value = "";
     document.getElementById("suc-url-ubi").value = "";
+    document.getElementById("suc-logo-actual").value = "";
+    document.getElementById("suc-logo-preview").style.display = "none";
     document.getElementById("btn-actualizar-suc").disabled = true;
+  }
+
+  function previsualizarLogoSucursal() {
+    const input = document.getElementById("suc-logo");
+    const preview = document.getElementById("suc-logo-preview");
+    if (!input.files || !input.files[0]) return;
+    preview.src = URL.createObjectURL(input.files[0]);
+    preview.style.display = "";
   }
 
   async function guardarSucursal(esActualizacion) {
@@ -208,6 +244,7 @@
     const celular = document.getElementById("suc-celular").value.trim();
     const ubicacion = document.getElementById("suc-ubicacion").value.trim();
     const urlUbi = document.getElementById("suc-url-ubi").value.trim();
+    const archivoLogo = document.getElementById("suc-logo").files[0] || null;
     if (!nombre || !celular) { mostrarMensaje(MENSAJES.CAMPOS_INCOMPLETOS, "error"); return; }
 
     const mensajeConfirmacion = esActualizacion
@@ -219,11 +256,29 @@
     const idAdmin = admin ? admin.id_admin : null;
     const idExistente = document.getElementById("suc-id").value;
 
-    const { error } = esActualizacion && idExistente
-      ? await SucursalRedesService.actualizarSucursal(idExistente, nombre, celular, ubicacion, urlUbi, idAdmin)
-      : await SucursalRedesService.crearSucursal(nombre, celular, ubicacion, urlUbi, idAdmin);
+    if (esActualizacion && idExistente) {
+      // El logo se mantiene si no se eligió uno nuevo.
+      let urlLogo = document.getElementById("suc-logo-actual").value || null;
+      if (archivoLogo) {
+        const { data: nuevaUrl, error: errorLogo } = await SucursalRedesService.subirLogoSucursal(archivoLogo, idExistente);
+        if (errorLogo) { mostrarMensaje("No se pudo subir el logo.", "error"); return; }
+        urlLogo = nuevaUrl;
+      }
+      const { error } = await SucursalRedesService.actualizarSucursal(idExistente, nombre, celular, ubicacion, urlUbi, urlLogo, idAdmin);
+      if (error) { mostrarMensaje("No se pudo guardar la sucursal.", "error"); return; }
+    } else {
+      // Se crea primero sin logo (aún no existe el id para nombrar el archivo),
+      // y si se eligió uno, se sube y se guarda con una segunda llamada.
+      const { data: nuevoId, error } = await SucursalRedesService.crearSucursal(nombre, celular, ubicacion, urlUbi, null, idAdmin);
+      if (error) { mostrarMensaje("No se pudo guardar la sucursal.", "error"); return; }
 
-    if (error) { mostrarMensaje("No se pudo guardar la sucursal.", "error"); return; }
+      if (archivoLogo && nuevoId) {
+        const { data: urlLogo, error: errorLogo } = await SucursalRedesService.subirLogoSucursal(archivoLogo, nuevoId);
+        if (!errorLogo && urlLogo) {
+          await SucursalRedesService.actualizarSucursal(nuevoId, nombre, celular, ubicacion, urlUbi, urlLogo, idAdmin);
+        }
+      }
+    }
 
     mostrarMensaje(MENSAJES.GUARDADO_EXITO, "exito");
     limpiarFormularioSucursal();
@@ -240,13 +295,14 @@
     tbody.innerHTML = "";
 
     if (error || !data || data.length === 0) {
-      tbody.innerHTML = `<tr class="admin-empty-row"><td colspan="3">Sin redes sociales registradas.</td></tr>`;
+      tbody.innerHTML = `<tr class="admin-empty-row"><td colspan="4">Sin redes sociales registradas.</td></tr>`;
       return;
     }
 
     data.forEach((r) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
+        <td>${r.logo_red_social ? `<img src="${r.logo_red_social}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">` : "—"}</td>
         <td>${r.nom_red}</td>
         <td>${r.url_red}</td>
         <td>
@@ -258,6 +314,11 @@
         document.getElementById("red-id").value = r.id_red;
         document.getElementById("red-nombre").value = r.nom_red;
         document.getElementById("red-url").value = r.url_red;
+        document.getElementById("red-logo-actual").value = r.logo_red_social || "";
+        document.getElementById("red-logo").value = "";
+        const preview = document.getElementById("red-logo-preview");
+        if (r.logo_red_social) { preview.src = r.logo_red_social; preview.style.display = ""; }
+        else { preview.style.display = "none"; }
         document.getElementById("btn-actualizar-red").disabled = false;
         document.getElementById("form-red").scrollIntoView({ behavior: "smooth" });
       });
@@ -277,12 +338,23 @@
   function limpiarFormularioRed() {
     document.getElementById("form-red").reset();
     document.getElementById("red-id").value = "";
+    document.getElementById("red-logo-actual").value = "";
+    document.getElementById("red-logo-preview").style.display = "none";
     document.getElementById("btn-actualizar-red").disabled = true;
+  }
+
+  function previsualizarLogoRed() {
+    const input = document.getElementById("red-logo");
+    const preview = document.getElementById("red-logo-preview");
+    if (!input.files || !input.files[0]) return;
+    preview.src = URL.createObjectURL(input.files[0]);
+    preview.style.display = "";
   }
 
   async function guardarRed(esActualizacion) {
     const nombre = document.getElementById("red-nombre").value.trim();
     const url = document.getElementById("red-url").value.trim();
+    const archivoLogo = document.getElementById("red-logo").files[0] || null;
     if (!nombre || !url) { mostrarMensaje(MENSAJES.CAMPOS_INCOMPLETOS, "error"); return; }
 
     const mensajeConfirmacion = esActualizacion
@@ -294,11 +366,29 @@
     const idAdmin = admin ? admin.id_admin : null;
     const idExistente = document.getElementById("red-id").value;
 
-    const { error } = esActualizacion && idExistente
-      ? await SucursalRedesService.actualizarRed(idExistente, nombre, url, idAdmin)
-      : await SucursalRedesService.crearRed(nombre, url, idAdmin);
+    if (esActualizacion && idExistente) {
+      // El logo se mantiene si no se eligió uno nuevo.
+      let urlLogo = document.getElementById("red-logo-actual").value || null;
+      if (archivoLogo) {
+        const { data: nuevaUrl, error: errorLogo } = await SucursalRedesService.subirLogoRed(archivoLogo, idExistente);
+        if (errorLogo) { mostrarMensaje("No se pudo subir el logo.", "error"); return; }
+        urlLogo = nuevaUrl;
+      }
+      const { error } = await SucursalRedesService.actualizarRed(idExistente, nombre, url, urlLogo, idAdmin);
+      if (error) { mostrarMensaje("No se pudo guardar la red social.", "error"); return; }
+    } else {
+      // Se crea primero sin logo (aún no existe el id para nombrar el archivo),
+      // y si se eligió uno, se sube y se guarda con una segunda llamada.
+      const { data: nuevoId, error } = await SucursalRedesService.crearRed(nombre, url, idAdmin);
+      if (error) { mostrarMensaje("No se pudo guardar la red social.", "error"); return; }
 
-    if (error) { mostrarMensaje("No se pudo guardar la red social.", "error"); return; }
+      if (archivoLogo && nuevoId) {
+        const { data: urlLogo, error: errorLogo } = await SucursalRedesService.subirLogoRed(archivoLogo, nuevoId);
+        if (!errorLogo && urlLogo) {
+          await SucursalRedesService.actualizarRed(nuevoId, nombre, url, urlLogo, idAdmin);
+        }
+      }
+    }
 
     mostrarMensaje(MENSAJES.GUARDADO_EXITO, "exito");
     limpiarFormularioRed();
