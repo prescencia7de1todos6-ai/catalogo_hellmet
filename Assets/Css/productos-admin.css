@@ -12,10 +12,12 @@
 
 @media (max-width: 900px) {
   .features-columns { grid-template-columns: 1fr 1fr; }
+
 }
 
 @media (max-width: 640px) {
   .features-columns { grid-template-columns: 1fr; }
+  .features-columns > div { min-width: 0; }
 }
 
 .features-columns > div > p {

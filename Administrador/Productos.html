@@ -39,7 +39,7 @@
         <div class="admin-form-grid">
           <div class="admin-field">
             <label for="prod-nombre">Nombre</label>
-            <input type="text" id="prod-nombre" required>
+            <input type="text" id="prod-nombre" required oninput="this.value=this.value.toUpperCase()">
           </div>
           <div class="admin-field">
             <label for="prod-precio">Precio (Bs)</label>
@@ -76,8 +76,8 @@
             <p>Características (elemento + cualidad)</p>
             <div class="features-list" id="lista-datos-especificos">
               <div class="specific-add-row">
-                <input type="text" id="especifico-etiqueta" placeholder="Elemento (ej: ruedas)">
-                <input type="text" id="especifico-valor" placeholder="Cualidad (ej: da buen movimiento)">
+                <input type="text" id="especifico-etiqueta" placeholder="Elemento (ej: ruedas)" oninput="this.value=this.value.toUpperCase()">
+                <input type="text" id="especifico-valor" placeholder="Cualidad (ej: da buen movimiento)" oninput="this.value=this.value.toLowerCase()">
                 <button type="button" class="admin-btn ghost" id="btn-add-especifico">+</button>
               </div>
             </div>

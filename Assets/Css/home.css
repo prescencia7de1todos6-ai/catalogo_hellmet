@@ -67,3 +67,6 @@
   height: 130px;
   border-radius: 50%;
 }
+.home-category-circle:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
