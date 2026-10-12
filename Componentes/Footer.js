@@ -23,7 +23,7 @@ async function renderFooter() {
   contenedor.innerHTML = `
     <footer class="site-footer">
       <div class="footer-col">
-        <h4>Compañía</h4>
+        <h4>Sobre el nosotros</h4>
         <p>Bienvenido a HELLMET, especialistas en hornos, cocinas, parrillas y broasteras; todas semi-industriales. Para usos domésticos o de negocio/emprendimientos.</p>
       </div>
       <div class="footer-col">

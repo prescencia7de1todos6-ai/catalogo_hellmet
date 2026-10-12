@@ -8,29 +8,7 @@ body {
   isolation: isolate; /* evita que el z-index -1 se salga del body */
 }
  
-body::before,
-body::after {
-  content: "";
-  position: fixed;
-  top: 50%;
-  width: min(70vw, 820px);
-  aspect-ratio: 1;
-  transform: translateY(-52%) rotate(-8deg);
-  border-radius: 42% 58% 65% 35% / 55% 40% 60% 45%;
-  background: radial-gradient(circle at 32% 30%, #ffffff 0%, var(--bg-panel) 45%, transparent 75%);
-  z-index: -1;
-  pointer-events: none;
-}
- 
-body::before {
-  left: -18vw;
-}
- 
-body::after {
-  right: -18vw;
-  transform: translateY(-46%) rotate(178deg);
-  background: radial-gradient(circle at 32% 30%, #ffffff 0%, var(--bg-panel) 45%, transparent 75%);
-}
+
 
 
 .site-header {
