@@ -35,7 +35,8 @@ const ProductosService = {
       .select("id_prod, nom_prod, precio, img_producto(url_img, orden)")
       .eq("id_cate", idCategoria)
       .eq("activo", true)
-      .order("nom_prod");
+      .order("fec_reg", { ascending: true })   // del más antiguo al más nuevo registrado
+      .order("id_prod", { ascending: true });  // desempate si dos tienen la misma fecha
   },
 
   /** Trae un producto activo completo con todas sus relaciones, por su id_prod
