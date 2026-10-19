@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HELLMET — Producto</title>
+<title>HELMET — Producto</title>
 <meta name="view-transition" content="same-origin">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -99,7 +99,7 @@
     const { data: producto, error } = await ProductosService.obtenerPublicoPorId(idProd);
     if (error || !producto) { mostrarVacio(); return; }
 
-    document.title = `HELLMET — ${producto.nom_prod}`;
+    document.title = `HELMET — ${producto.nom_prod}`;
     document.getElementById("detail-eyebrow").textContent = producto.categoria ? producto.categoria.nom_cate : "";
     document.getElementById("detail-name").textContent = producto.nom_prod;
 

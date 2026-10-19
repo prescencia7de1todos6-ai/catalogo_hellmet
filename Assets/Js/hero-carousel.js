@@ -1,5 +1,5 @@
 /* =========================================================
-   HELLMET — Assets/Js/hero-carousel.js
+   HELMET — Assets/Js/hero-carousel.js
    =========================================================
    Carrusel de la portada (index.html): se mueve solo, lento
    y sin pausas, en un ciclo interminable (nunca "salta" ni
@@ -15,12 +15,12 @@
    ========================================================= */
 
 const HERO_IMAGES = [
-  { src: "Img/Hero/img1.jpeg", alt: "Horno HELLMET" },
-  { src: "Img/Hero/img2.jpeg", alt: "Parrilla HELLMET" },
-  { src: "Img/Hero/img3.jpeg", alt: "Broastera HELLMET" },
-  { src: "Img/Hero/img4.jpeg", alt: "Cocina HELLMET" },
-  { src: "Img/Hero/img5.jpeg", alt: "Cocina HELLMET" },
-  { src: "Img/Hero/img6.jpeg", alt: "Cocina HELLMET" },
+  { src: "Img/Hero/img1.jpeg", alt: "Horno HELMET" },
+  { src: "Img/Hero/img2.jpeg", alt: "Parrilla HELMET" },
+  { src: "Img/Hero/img3.jpeg", alt: "Broastera HELMET" },
+  { src: "Img/Hero/img4.jpeg", alt: "Cocina HELMET" },
+  { src: "Img/Hero/img5.jpeg", alt: "Cocina HELMET" },
+  { src: "Img/Hero/img6.jpeg", alt: "Cocina HELMET" },
 ];
 
 function renderHeroCarousel(rutaAssets) {

@@ -1,5 +1,5 @@
 /* =========================================================
-   HELLMET — Componentes / Footer.js
+   HELMET — Componentes / Footer.js
    Pie de página público, con 3 columnas:
      1. Mensaje de bienvenida de la empresa (texto fijo)
      2. Ubicación — cada sucursal registrada, con su dirección
@@ -24,7 +24,7 @@ async function renderFooter() {
     <footer class="site-footer">
       <div class="footer-col">
         <h4>Sobre el nosotros</h4>
-        <p>Bienvenido a HELLMET, especialistas en hornos, cocinas, parrillas y broasteras; todas semi-industriales. Para usos domésticos o de negocio/emprendimientos.</p>
+        <p>Bienvenido a HELMET, especialistas en hornos, cocinas, parrillas y broasteras; todas semi-industriales. Para usos domésticos o de negocio/emprendimientos.</p>
       </div>
       <div class="footer-col">
         <h4>Ubicación</h4>

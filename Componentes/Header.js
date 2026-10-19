@@ -18,7 +18,7 @@ function renderHeader(rutaAssets, rutaInicio) {
 
   contenedor.innerHTML = `
     <header class="site-header">
-      <a href="${rutaInicio}" class="site-header-logo">HELLMET</a>
+      <a href="${rutaInicio}" class="site-header-logo">HELMET</a>
       <div class="header-logo-badge">
         <img src="${rutaAssets}/Img/logo_hellmet.png" alt="Logo HELLMET">
       </div>

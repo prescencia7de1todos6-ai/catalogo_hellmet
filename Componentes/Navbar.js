@@ -36,7 +36,7 @@ async function renderNavbar(seccionActiva) {
     <aside class="admin-sidebar">
       <div class="sidebar-logo">
         <img src="../Assets/Img/logo_hellmet.png" alt="Logo HELLMET">
-        HELLMET
+        HELMET
       </div>
       <nav class="admin-nav">
         ${NAVBAR_ITEMS.map((item) => `

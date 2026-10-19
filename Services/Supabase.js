@@ -24,7 +24,7 @@ if (SUPABASE_URL.startsWith("http") && typeof supabase !== "undefined") {
   supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 } else {
   console.warn(
-    "[HELLMET] Supabase no está configurado todavía. Edita Services/Supabase.js " +
+    "[HELMET] Supabase no está configurado todavía. Edita Services/Supabase.js " +
     "y pega tu URL y anon key."
   );
 }

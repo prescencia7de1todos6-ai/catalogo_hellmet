@@ -41,7 +41,7 @@ const AdministradorService = {
       .single();
 
     if (error || !data) {
-      console.error("[HELLMET] Error de Supabase al iniciar sesión:", error);
+      console.error("[HELMET] Error de Supabase al iniciar sesión:", error);
       return { error: MENSAJES.CREDENCIALES_INVALIDAS };
     }
 

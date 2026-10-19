@@ -1,5 +1,5 @@
 /* =========================================================
-   HELLMET — Assets/Js/categoria-publica.js
+   HELMET — Assets/Js/categoria-publica.js
    Lógica compartida por Hornos.html, Parrillas.html,
    Broasteras.html y Cocinas.html (Paginas/Categorias/).
 
@@ -10,7 +10,7 @@
 async function inicializarPaginaCategoria(nombreCategoria, descripcion) {
   document.getElementById("category-name").textContent = capitalizar(nombreCategoria);
   document.getElementById("category-description").textContent = descripcion;
-  document.title = `HELLMET — ${capitalizar(nombreCategoria)}`;
+  document.title = `HELMET — ${capitalizar(nombreCategoria)}`;
 
   const categoria = await CategoriaService.obtenerPorNombre(nombreCategoria);
 
