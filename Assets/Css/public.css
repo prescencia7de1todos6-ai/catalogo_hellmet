@@ -68,9 +68,60 @@ body {
   border-top: 1px solid var(--header-line);
   padding: 24px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
+  margin-top: 0;
+}
+
+/* ---------- Franja de redes sociales (encima del footer) ---------- */
+.redes-bar {
   margin-top: 60px;
+  padding: 0 24px 24px;
+}
+
+.redes-bar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+}
+
+.redes-bar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-panel);
+  border: 2px solid var(--line);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.redes-bar-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+a.redes-bar-btn:hover,
+a.redes-bar-btn:focus-visible {
+  transform: translateY(-3px) scale(1.08);
+  border-color: var(--accent-hover);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+  outline: none;
+}
+
+.redes-bar-inicial {
+  font-weight: bold;
+  font-size: 1.4rem;
+  color: var(--text);
 }
 
 @media (max-width: 640px) {

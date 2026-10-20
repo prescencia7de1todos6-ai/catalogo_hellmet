@@ -21,6 +21,8 @@ const HERO_IMAGES = [
   { src: "Img/Hero/img4.jpeg", alt: "Cocina HELMET" },
   { src: "Img/Hero/img5.jpeg", alt: "Cocina HELMET" },
   { src: "Img/Hero/img6.jpeg", alt: "Cocina HELMET" },
+  { src: "Img/Hero/pizzero3.jpg", alt: "Cocina HELMET" },
+  { src: "Img/Hero/cocina.jpg", alt: "Cocina HELMET" },
 ];
 
 function renderHeroCarousel(rutaAssets) {

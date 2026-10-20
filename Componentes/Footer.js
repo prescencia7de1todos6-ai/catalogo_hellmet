@@ -1,10 +1,12 @@
 /* =========================================================
    HELMET — Componentes / Footer.js
-   Pie de página público, con 3 columnas:
+   Franja de Redes Sociales (encima del footer) + pie de página
+   público con 2 columnas:
+     - Redes Sociales — solo el icono (logo_red_social) dentro de
+       un círculo, que funciona como botón <a> hacia su url_red
      1. Mensaje de bienvenida de la empresa (texto fijo)
      2. Ubicación — cada sucursal registrada, con su dirección
         como enlace <a> hacia su url_ubi (link de Google Maps)
-     3. Redes Sociales — cada una como enlace <a> hacia su url_red
 
    Uso:
      <div id="footer-container"></div>
@@ -21,6 +23,9 @@ async function renderFooter() {
   if (!contenedor) return;
 
   contenedor.innerHTML = `
+    <nav class="redes-bar" aria-label="Redes sociales">
+      <ul id="footer-redes" class="redes-bar-list"></ul>
+    </nav>
     <footer class="site-footer">
       <div class="footer-col">
         <h4>Sobre el nosotros</h4>
@@ -29,12 +34,6 @@ async function renderFooter() {
       <div class="footer-col">
         <h4>Ubicación</h4>
         <ul id="footer-ubicaciones" class="footer-redes-list">
-          <li>Cargando...</li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Redes Sociales</h4>
-        <ul id="footer-redes" class="footer-redes-list">
           <li>Cargando...</li>
         </ul>
       </div>
@@ -65,17 +64,24 @@ async function cargarUbicacionesFooter() {
 
 async function cargarRedesFooter() {
   const cont = document.getElementById("footer-redes");
-  if (typeof SucursalRedesService === "undefined") { cont.innerHTML = "<li>—</li>"; return; }
+  const barra = cont.closest(".redes-bar");
+  if (typeof SucursalRedesService === "undefined") { barra.style.display = "none"; return; }
 
   const { data, error } = await SucursalRedesService.listarRedes();
   if (error || !data || data.length === 0) {
-    cont.innerHTML = `<li>Aún sin redes sociales cargadas.</li>`;
+    barra.style.display = "none";
     return;
   }
-  cont.innerHTML = data.map((r) =>
-  {
-    const logo = r.logo_red_social ? `<img src="${r.logo_red_social}" alt="" class="footer-logo-circular">`:"";
-    return `<li class="footer-fila-logo">${logo}<a href="${r.url_red}" target="_blank" rel="noopener">${r.nom_red}</a></li>`
-  }
-  ).join("");
+
+  // Cada red = un botón circular con su icono, que abre su url_red.
+  cont.innerHTML = data.map((r) => {
+    const nombre = r.nom_red || "Red social";
+    const icono = r.logo_red_social
+      ? `<img src="${r.logo_red_social}" alt="${nombre}">`
+      : `<span class="redes-bar-inicial">${nombre.charAt(0).toUpperCase()}</span>`;
+    const boton = r.url_red
+      ? `<a class="redes-bar-btn" href="${r.url_red}" target="_blank" rel="noopener" title="${nombre}" aria-label="${nombre}">${icono}</a>`
+      : `<span class="redes-bar-btn" title="${nombre}">${icono}</span>`;
+    return `<li>${boton}</li>`;
+  }).join("");
 }
